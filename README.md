@@ -1,2 +1,2 @@
 # maestro
-maestro enables users to easily access their lexicon without searching too deep when speaking or writing.
+According to research, we repeat words 38 times before they enter our surface lexicon. maestro (spanish for teacher) helps users to easily add words (not neccessarily new), to their surface lexicon. Basically, maestro daily furnishes users with example usages of words along with brief explanation for at least 38 times. This enables users to easily access their lexicon without searching too deep when speaking or writing.
