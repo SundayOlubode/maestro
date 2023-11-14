@@ -14,12 +14,29 @@ const user_module_1 = require("./user/user.module");
 const word_module_1 = require("./word/word.module");
 const common_module_1 = require("./common/common.module");
 const auth_module_1 = require("./auth/auth.module");
+const config_1 = require("@nestjs/config");
+const email_module_1 = require("./email/email.module");
+const cache_manager_1 = require("@nestjs/cache-manager");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [database_module_1.DatabaseModule, user_module_1.UserModule, word_module_1.WordModule, common_module_1.CommonModule, auth_module_1.AuthModule],
+        imports: [
+            config_1.ConfigModule.forRoot({
+                isGlobal: true,
+            }),
+            database_module_1.DatabaseModule,
+            user_module_1.UserModule,
+            word_module_1.WordModule,
+            common_module_1.CommonModule,
+            auth_module_1.AuthModule,
+            email_module_1.EmailModule,
+            cache_manager_1.CacheModule.register({
+                isGlobal: true,
+                ttl: 600000,
+            }),
+        ],
         controllers: [],
         providers: [app_service_1.AppService],
     })
