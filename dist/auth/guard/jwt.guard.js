@@ -12,13 +12,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthGuard = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
+const core_1 = require("@nestjs/core");
 const jwt_1 = require("@nestjs/jwt");
+const decorator_1 = require("../decorator");
 let AuthGuard = class AuthGuard {
-    constructor(jwtService, config) {
+    constructor(jwtService, config, reflector) {
         this.jwtService = jwtService;
         this.config = config;
+        this.reflector = reflector;
     }
     async canActivate(context) {
+        const isPublic = this.reflector.getAllAndOverride(decorator_1.IS_PUBLIC_KEY, [context.getHandler(), context.getClass()]);
+        if (isPublic) {
+            return true;
+        }
         const request = context.switchToHttp().getRequest();
         const token = this.extractTokenFromHeader(request);
         if (!token) {
@@ -26,9 +33,9 @@ let AuthGuard = class AuthGuard {
         }
         try {
             const payload = await this.jwtService.verifyAsync(token, {
-                secret: this.config.get("JWT_SECRET"),
+                secret: this.config.get('JWT_SECRET'),
             });
-            request["user"] = payload;
+            request['user'] = payload;
         }
         catch {
             throw new common_1.UnauthorizedException();
@@ -36,14 +43,15 @@ let AuthGuard = class AuthGuard {
         return true;
     }
     extractTokenFromHeader(request) {
-        const [type, token] = request.headers.authorization?.split(" ") ?? [];
-        return type === "Bearer" ? token : undefined;
+        const [type, token] = request.headers.authorization?.split(' ') ?? [];
+        return type === 'Bearer' ? token : undefined;
     }
 };
 exports.AuthGuard = AuthGuard;
 exports.AuthGuard = AuthGuard = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [jwt_1.JwtService,
-        config_1.ConfigService])
+        config_1.ConfigService,
+        core_1.Reflector])
 ], AuthGuard);
 //# sourceMappingURL=jwt.guard.js.map

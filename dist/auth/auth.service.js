@@ -59,6 +59,9 @@ let AuthService = class AuthService {
             throw new common_1.ForbiddenException('Credentials incorrect');
         }
         delete user.password;
+        const { otp, otpExpiry } = (0, common_2.generateOtp)();
+        console.log(otp, otpExpiry);
+        await this.cacheManager.set(`otp-${user.id}`, JSON.stringify(otp), otpExpiry);
         const accessToken = await this.signToken(user.id, user.email);
         return {
             status: 'success',
@@ -67,9 +70,13 @@ let AuthService = class AuthService {
         };
     }
     async verify(otp, user) {
+        if (!user)
+            throw new common_1.ForbiddenException('Please login to proceed');
+        if (user.verified)
+            throw new common_1.ForbiddenException('Account already verified');
         const cachedOtp = await this.cacheManager.get(`otp-${user.id}`);
         console.log(cachedOtp, otp);
-        if (!cachedOtp || cachedOtp !== otp) {
+        if (!cachedOtp || cachedOtp !== otp.toString()) {
             throw new common_1.ForbiddenException('Expired or Incorrect OTP!');
         }
         return `Your account has been successfully verified`;

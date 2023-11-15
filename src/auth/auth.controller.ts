@@ -13,7 +13,7 @@ import {
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/create-auth.dto';
 import { AuthGuard } from './guard';
-import { GetUser } from './decorator';
+import { GetUser, Public } from './decorator';
 import { User } from 'src/user/entities/user.entity';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 
@@ -21,11 +21,13 @@ import { CreateUserDto } from 'src/user/dto/create-user.dto';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Post('register')
   create(@Body() dto: CreateUserDto) {
     return this.authService.create(dto);
   }
 
+  @Public()
   @HttpCode(HttpStatus.OK)
   @Post('login')
   login(@Body() dto: LoginDto) {
