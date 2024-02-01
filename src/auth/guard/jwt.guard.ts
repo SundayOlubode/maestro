@@ -19,7 +19,7 @@ export class AuthGuard implements CanActivate {
   ) {}
 
   /**
-   * Check if user is authenticated
+   * CHECK USER AUTHENTICATION
    * @param context
    * @returns {Promise<boolean>}
    */
@@ -50,6 +50,11 @@ export class AuthGuard implements CanActivate {
     return true;
   }
 
+  /**
+   * EXTRACT TOKEN FROM HEADER
+   * @param request
+   * @returns {token: string | undefined}
+   */
   private extractTokenFromHeader(
     request: Request,
   ): string | undefined {

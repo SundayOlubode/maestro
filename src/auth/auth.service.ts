@@ -97,10 +97,10 @@ export class AuthService {
   }
 
   /**
-   * Verify User
+   * VERIFY USER
    * @param otp
    * @param user
-   * @returns { string }
+   * @returns { resp: Promise<string> }
    */
   async verify(otp: number, user: User) {
     if (!user)
@@ -129,7 +129,7 @@ export class AuthService {
   }
 
   /**
-   * Sign JWT Token
+   * SIGN TOKEN
    * @param userId
    * @param email
    * @returns { token: string }

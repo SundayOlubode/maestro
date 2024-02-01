@@ -1,4 +1,4 @@
-version: "3.7"
+version: '3.7'
 
 services:
   # api:
@@ -15,7 +15,7 @@ services:
     image: postgres:11.5-alpine
     container_name: maestro-db
     ports:
-      - 5432:5432
+      - 5433:5432
     env_file: .env
     volumes:
       - pgdata:/var/lib/postgresql/data
