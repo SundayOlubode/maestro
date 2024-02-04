@@ -47,7 +47,11 @@ export declare class AuthService {
             access_token: string;
         };
     }>;
-    verify(otp: number, user: User): Promise<string>;
+    verify(otp: number, user: User): Promise<{
+        status: string;
+        message: string;
+        statusCode: number;
+    }>;
     private signToken;
     findAll(): string;
     findOne(id: number): string;

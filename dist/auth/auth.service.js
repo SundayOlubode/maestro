@@ -71,15 +71,26 @@ let AuthService = class AuthService {
     }
     async verify(otp, user) {
         if (!user)
-            throw new common_1.ForbiddenException('Please login to proceed');
+            throw new common_1.ForbiddenException('Please login to proceed!');
         if (user.verified)
-            throw new common_1.ForbiddenException('Account already verified');
+            throw new common_1.ForbiddenException('Account already verified. Please login!');
         const cachedOtp = await this.cacheManager.get(`otp-${user.id}`);
-        console.log(cachedOtp, otp);
         if (!cachedOtp || cachedOtp !== otp.toString()) {
             throw new common_1.ForbiddenException('Expired or Incorrect OTP!');
         }
-        return `Your account has been successfully verified`;
+        await this.db.user.update({
+            where: {
+                id: user.id,
+            },
+            data: {
+                verified: true,
+            },
+        });
+        return {
+            status: 'success',
+            message: 'Account verified successfully!',
+            statusCode: 200,
+        };
     }
     async signToken(userId, email) {
         const payload = {

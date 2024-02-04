@@ -41,7 +41,7 @@ export class AuthService {
     delete user.password;
     const accessToken = await this.signToken(user.id, user.email);
 
-    // GENRATE OTP
+    // GENERATE OTP
     const { otp, otpExpiry } = generateOtp();
 
     // STORE OTP IN CACHE, EXP AS OTPEXPIRY
@@ -104,28 +104,32 @@ export class AuthService {
    */
   async verify(otp: number, user: User) {
     if (!user)
-      throw new ForbiddenException('Please login to proceed');
+      throw new ForbiddenException('Please login to proceed!');
     if (user.verified)
-      throw new ForbiddenException('Account already verified');
+      throw new ForbiddenException(
+        'Account already verified. Please login!',
+      );
 
     // VERIFY OTP
     const cachedOtp: string = await this.cacheManager.get<string>(
       `otp-${user.id}`,
     );
-    console.log(cachedOtp, otp);
-
     if (!cachedOtp || cachedOtp !== otp.toString()) {
       throw new ForbiddenException('Expired or Incorrect OTP!');
     }
-    // await this.db.user.update({
-    //   where: {
-    //     id: user.id,
-    //   },
-    //   data: {
-    //     verified: true,
-    //   },
-    // });
-    return `Your account has been successfully verified`;
+    await this.db.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        verified: true,
+      },
+    });
+    return {
+      status: 'success',
+      message: 'Account verified successfully!',
+      statusCode: 200,
+    };
   }
 
   /**

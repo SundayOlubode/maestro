@@ -39,5 +39,9 @@ export declare class AuthController {
             access_token: string;
         };
     }>;
-    verify(otp: number, user: User): Promise<string>;
+    verify(otp: number, user: User): Promise<{
+        status: string;
+        message: string;
+        statusCode: number;
+    }>;
 }
