@@ -26,7 +26,7 @@ export class AuthService {
   ) {}
 
   /**
-   * Register User
+   * REGISTER USER
    * @param dto
    * @returns
    */
@@ -45,10 +45,14 @@ export class AuthService {
     const { otp, otpExpiry } = generateOtp();
 
     // STORE OTP IN CACHE, EXP AS OTPEXPIRY
-    await this.cacheManager.set(`otp-${user.id}`, otp, 60000);
+    await this.cacheManager.set(`otp-${user.id}`, otp, otpExpiry);
 
     // SEND OTP TO EMAIL
-    await this.email.sendOtp(user, otp);
+    if (this.config.get('NODE_ENV') === 'production') {
+      await this.email.sendOtp(user, otp);
+    } else {
+      console.log('OTP', otp);
+    }
 
     return {
       status: 'success',
@@ -58,7 +62,7 @@ export class AuthService {
   }
 
   /**
-   * Login User
+   * LOGIN USER
    * @param dto
    * @returns
    */
@@ -75,17 +79,6 @@ export class AuthService {
       throw new ForbiddenException('Credentials incorrect');
     }
     delete user.password;
-
-    // GENRATE OTP
-    const { otp, otpExpiry } = generateOtp();
-    console.log(otp, otpExpiry);
-
-    // STORE OTP IN CACHE, EXP AS OTPEXPIRY
-    await this.cacheManager.set(
-      `otp-${user.id}`,
-      JSON.stringify(otp),
-      otpExpiry,
-    );
 
     const accessToken = await this.signToken(user.id, user.email);
 
@@ -111,10 +104,14 @@ export class AuthService {
       );
 
     // VERIFY OTP
+    console.log('VERIFY KEY', `otp-${user.id}`);
+
     const cachedOtp: string = await this.cacheManager.get<string>(
       `otp-${user.id}`,
     );
-    if (!cachedOtp || cachedOtp !== otp.toString()) {
+    console.log(cachedOtp, otp);
+
+    if (!cachedOtp || parseInt(cachedOtp) !== otp) {
       throw new ForbiddenException('Expired or Incorrect OTP!');
     }
     await this.db.user.update({
@@ -152,6 +149,31 @@ export class AuthService {
       secret,
     });
     return token;
+  }
+
+  /**
+   * RESEND OTP
+   * @param user
+   * @returns { status: string, message: string }
+   */
+  async resendOtp(user: User) {
+    if (!user)
+      throw new ForbiddenException('Please login to proceed!');
+
+    const { otp, otpExpiry } = generateOtp();
+    await this.cacheManager.set(`otp-${user.id}`, otp, otpExpiry);
+
+    // SEND OTP TO EMAIL
+    if (this.config.get('NODE_ENV') === 'production') {
+      await this.email.sendOtp(user, otp);
+    } else {
+      console.log('OTP', otp);
+    }
+
+    return {
+      status: 'success',
+      message: 'OTP sent to email. Please verify your account',
+    };
   }
 
   findAll() {

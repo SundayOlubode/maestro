@@ -44,4 +44,8 @@ export declare class AuthController {
         message: string;
         statusCode: number;
     }>;
+    resendOtp(user: User): Promise<{
+        status: string;
+        message: string;
+    }>;
 }

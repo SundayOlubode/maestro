@@ -4,9 +4,10 @@ exports.GetUser = void 0;
 const common_1 = require("@nestjs/common");
 exports.GetUser = (0, common_1.createParamDecorator)((data, ctx) => {
     const request = ctx.switchToHttp().getRequest();
-    if (data) {
-        return request.user[data];
+    const user = request['user'];
+    if (user) {
+        return user;
     }
-    return request.user;
+    return null;
 });
 //# sourceMappingURL=getUser.decorator.js.map

@@ -53,6 +53,10 @@ export declare class AuthService {
         statusCode: number;
     }>;
     private signToken;
+    resendOtp(user: User): Promise<{
+        status: string;
+        message: string;
+    }>;
     findAll(): string;
     findOne(id: number): string;
     remove(id: number): string;

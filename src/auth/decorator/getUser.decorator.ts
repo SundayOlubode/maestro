@@ -1,14 +1,33 @@
+// import {
+//   createParamDecorator,
+//   ExecutionContext,
+// } from '@nestjs/common';
+
+// export const GetUser = createParamDecorator(
+//   (data: string | undefined, ctx: ExecutionContext) => {
+//     const request: Express.Request = ctx.switchToHttp().getRequest();
+//     console.log('request user', request['user']);
+
+//     if (request.user) {
+//       return request.user[data];
+//     }
+//     return null;
+//   },
+// );
+
 import {
   createParamDecorator,
   ExecutionContext,
 } from '@nestjs/common';
 
 export const GetUser = createParamDecorator(
-  (data: string | undefined, ctx: ExecutionContext) => {
+  (data: unknown, ctx: ExecutionContext) => {
     const request: Express.Request = ctx.switchToHttp().getRequest();
-    if (data) {
-      return request.user[data];
+
+    const user = request['user'];
+    if (user) {
+      return user;
     }
-    return request.user;
+    return null;
   },
 );

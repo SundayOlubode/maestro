@@ -38,8 +38,13 @@ let AuthService = class AuthService {
         delete user.password;
         const accessToken = await this.signToken(user.id, user.email);
         const { otp, otpExpiry } = (0, common_2.generateOtp)();
-        await this.cacheManager.set(`otp-${user.id}`, otp, 60000);
-        await this.email.sendOtp(user, otp);
+        await this.cacheManager.set(`otp-${user.id}`, otp, otpExpiry);
+        if (this.config.get('NODE_ENV') === 'production') {
+            await this.email.sendOtp(user, otp);
+        }
+        else {
+            console.log('OTP', otp);
+        }
         return {
             status: 'success',
             message: 'OTP sent to email. Please verify your account',
@@ -59,9 +64,6 @@ let AuthService = class AuthService {
             throw new common_1.ForbiddenException('Credentials incorrect');
         }
         delete user.password;
-        const { otp, otpExpiry } = (0, common_2.generateOtp)();
-        console.log(otp, otpExpiry);
-        await this.cacheManager.set(`otp-${user.id}`, JSON.stringify(otp), otpExpiry);
         const accessToken = await this.signToken(user.id, user.email);
         return {
             status: 'success',
@@ -74,8 +76,10 @@ let AuthService = class AuthService {
             throw new common_1.ForbiddenException('Please login to proceed!');
         if (user.verified)
             throw new common_1.ForbiddenException('Account already verified. Please login!');
+        console.log('VERIFY KEY', `otp-${user.id}`);
         const cachedOtp = await this.cacheManager.get(`otp-${user.id}`);
-        if (!cachedOtp || cachedOtp !== otp.toString()) {
+        console.log(cachedOtp, otp);
+        if (!cachedOtp || parseInt(cachedOtp) !== otp) {
             throw new common_1.ForbiddenException('Expired or Incorrect OTP!');
         }
         await this.db.user.update({
@@ -103,6 +107,22 @@ let AuthService = class AuthService {
             secret,
         });
         return token;
+    }
+    async resendOtp(user) {
+        if (!user)
+            throw new common_1.ForbiddenException('Please login to proceed!');
+        const { otp, otpExpiry } = (0, common_2.generateOtp)();
+        await this.cacheManager.set(`otp-${user.id}`, otp, otpExpiry);
+        if (this.config.get('NODE_ENV') === 'production') {
+            await this.email.sendOtp(user, otp);
+        }
+        else {
+            console.log('OTP', otp);
+        }
+        return {
+            status: 'success',
+            message: 'OTP sent to email. Please verify your account',
+        };
     }
     findAll() {
         return `This action returns all auth`;
