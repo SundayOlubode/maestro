@@ -1939,6 +1939,11 @@ charenc@0.0.2:
   resolved "https://registry.yarnpkg.com/charenc/-/charenc-0.0.2.tgz#c0a1d2f3a7092e03774bfa83f14c0fc5790a8667"
   integrity sha512-yrLQ/yVUFXkzg7EDQsPieE/53+0RlaWTs+wBrvW36cyilJ2SaDWfl4Yj7MtLTXleV9uEKefbAGUPv2/iWSooRA==
 
+check-if-word@^1.2.1:
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/check-if-word/-/check-if-word-1.2.1.tgz#60a9cb8ed99f0321e7abddb05201195b80094b19"
+  integrity sha512-FrB/d+r+ITgMjxGfIS1tE7OlfI2bNSARSCNyC6el23ESDP1ugP1MJPts0ecYawiO6xPE2msJhAYtqBgAMD8oPw==
+
 chokidar@3.5.3, chokidar@^3.5.3:
   version "3.5.3"
   resolved "https://registry.yarnpkg.com/chokidar/-/chokidar-3.5.3.tgz#1cf37c8707b932bd1af1ae22c0432e2acd1903bd"

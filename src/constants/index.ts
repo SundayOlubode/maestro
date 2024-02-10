@@ -8,3 +8,6 @@ export const JWT_SECRET = process.env.JWT_SECRET;
 export const MAILGUN_API_KEY = process.env.MAILGUN_API_KEY;
 export const EMAIL_DOMAIN = process.env.EMAIL_DOMAIN;
 export const NODE_ENV = process.env.NODE_ENV;
+
+import * as checkWord from 'check-if-word';
+export const EnglishWords = checkWord('en');

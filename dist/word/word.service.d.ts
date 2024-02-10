@@ -15,9 +15,10 @@ export declare class WordService {
             word: string;
         };
     }>;
+    private generateWordMeaningAndUsages;
+    private updateWordUsersAndCounter;
     findAll(): string;
     findOne(id: number): string;
     update(id: number, updateWordDto: UpdateWordDto): string;
     remove(id: number): string;
-    private generateWordMeaningAndUsages;
 }

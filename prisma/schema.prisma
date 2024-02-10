@@ -31,7 +31,7 @@ model User {
 model Word {
   id Int @id @default(autoincrement())
 
-  word String
+  word String @unique
   meaning String
   usages String[]
 

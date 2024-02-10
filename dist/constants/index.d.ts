@@ -8,3 +8,4 @@ export declare const JWT_SECRET: string;
 export declare const MAILGUN_API_KEY: string;
 export declare const EMAIL_DOMAIN: string;
 export declare const NODE_ENV: string;
+export declare const EnglishWords: any;
