@@ -6,18 +6,15 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.WordModule = void 0;
+exports.OpenaiModule = void 0;
 const common_1 = require("@nestjs/common");
-const word_service_1 = require("./word.service");
-const word_controller_1 = require("./word.controller");
-const openai_service_1 = require("../openai/openai.service");
-let WordModule = class WordModule {
+const openai_service_1 = require("./openai.service");
+let OpenaiModule = class OpenaiModule {
 };
-exports.WordModule = WordModule;
-exports.WordModule = WordModule = __decorate([
+exports.OpenaiModule = OpenaiModule;
+exports.OpenaiModule = OpenaiModule = __decorate([
     (0, common_1.Module)({
-        controllers: [word_controller_1.WordController],
-        providers: [word_service_1.WordService, openai_service_1.OpenaiService],
+        providers: [openai_service_1.OpenaiService]
     })
-], WordModule);
-//# sourceMappingURL=word.module.js.map
+], OpenaiModule);
+//# sourceMappingURL=openai.module.js.map

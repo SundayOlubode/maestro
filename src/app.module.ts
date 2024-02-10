@@ -15,6 +15,7 @@ import type { RedisClientOptions } from 'redis';
 import { ExceptionModule } from './exception/exception.module';
 import * as redisStore from 'cache-manager-redis-store';
 import { ExceptionService } from './exception/exception.service';
+import { OpenaiModule } from './openai/openai.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { ExceptionService } from './exception/exception.service';
       isGlobal: true,
     }),
     ExceptionModule,
+    OpenaiModule,
   ],
   controllers: [],
   providers: [

@@ -32,11 +32,11 @@ model Word {
   id Int @id @default(autoincrement())
 
   word String
-  definition String
+  meaning String
   usages String[]
 
   users User[]
-  Counters Counter[]
+  counters Counter[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -47,16 +47,16 @@ model Word {
 model Counter {
   id Int @id @default(autoincrement())
   
-  userId Int
-  user User @relation(fields: [userId], references: [id])
+  user_id Int
+  user User @relation(fields: [user_id], references: [id])
 
-  wordId Int
-  word Word @relation(fields: [wordId], references: [id])
+  word_id Int
+  word Word @relation(fields: [word_id], references: [id])
 
   countdown Int @default(40)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  @@index([userId])
+  @@index([user_id])
 }

@@ -17,12 +17,13 @@ const common_1 = require("@nestjs/common");
 const word_service_1 = require("./word.service");
 const create_word_dto_1 = require("./dto/create-word.dto");
 const update_word_dto_1 = require("./dto/update-word.dto");
+const decorator_1 = require("../auth/decorator");
 let WordController = class WordController {
     constructor(wordService) {
         this.wordService = wordService;
     }
-    create(createWordDto) {
-        return this.wordService.create(createWordDto);
+    create(createWordDto, user) {
+        return this.wordService.create(createWordDto, user);
     }
     findAll() {
         return this.wordService.findAll();
@@ -41,8 +42,9 @@ exports.WordController = WordController;
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, decorator_1.GetUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [create_word_dto_1.CreateWordDto]),
+    __metadata("design:paramtypes", [create_word_dto_1.CreateWordDto, Object]),
     __metadata("design:returntype", void 0)
 ], WordController.prototype, "create", null);
 __decorate([

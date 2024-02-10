@@ -22,6 +22,7 @@ const guard_1 = require("./auth/guard");
 const jwt_1 = require("@nestjs/jwt");
 const exception_module_1 = require("./exception/exception.module");
 const exception_service_1 = require("./exception/exception.service");
+const openai_module_1 = require("./openai/openai.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -45,6 +46,7 @@ exports.AppModule = AppModule = __decorate([
                 isGlobal: true,
             }),
             exception_module_1.ExceptionModule,
+            openai_module_1.OpenaiModule,
         ],
         controllers: [],
         providers: [
