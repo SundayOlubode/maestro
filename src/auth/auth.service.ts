@@ -26,7 +26,7 @@ export class AuthService {
   ) {}
 
   /**
-   * Register User
+   * REGISTER USER
    * @param dto
    * @returns
    */
@@ -41,14 +41,18 @@ export class AuthService {
     delete user.password;
     const accessToken = await this.signToken(user.id, user.email);
 
-    // GENRATE OTP
+    // GENERATE OTP
     const { otp, otpExpiry } = generateOtp();
 
     // STORE OTP IN CACHE, EXP AS OTPEXPIRY
-    await this.cacheManager.set(`otp-${user.id}`, otp, 60000);
+    await this.cacheManager.set(`otp-${user.id}`, otp, otpExpiry);
 
     // SEND OTP TO EMAIL
-    await this.email.sendOtp(user, otp);
+    if (this.config.get('NODE_ENV') === 'production') {
+      await this.email.sendOtp(user, otp);
+    } else {
+      console.log('OTP', otp);
+    }
 
     return {
       status: 'success',
@@ -58,7 +62,7 @@ export class AuthService {
   }
 
   /**
-   * Login User
+   * LOGIN USER
    * @param dto
    * @returns
    */
@@ -76,17 +80,6 @@ export class AuthService {
     }
     delete user.password;
 
-    // GENRATE OTP
-    const { otp, otpExpiry } = generateOtp();
-    console.log(otp, otpExpiry);
-
-    // STORE OTP IN CACHE, EXP AS OTPEXPIRY
-    await this.cacheManager.set(
-      `otp-${user.id}`,
-      JSON.stringify(otp),
-      otpExpiry,
-    );
-
     const accessToken = await this.signToken(user.id, user.email);
 
     return {
@@ -97,39 +90,47 @@ export class AuthService {
   }
 
   /**
-   * Verify User
+   * VERIFY USER
    * @param otp
    * @param user
-   * @returns { string }
+   * @returns { resp: Promise<string> }
    */
   async verify(otp: number, user: User) {
     if (!user)
-      throw new ForbiddenException('Please login to proceed');
+      throw new ForbiddenException('Please login to proceed!');
     if (user.verified)
-      throw new ForbiddenException('Account already verified');
+      throw new ForbiddenException(
+        'Account already verified. Please login!',
+      );
 
     // VERIFY OTP
+    console.log('VERIFY KEY', `otp-${user.id}`);
+
     const cachedOtp: string = await this.cacheManager.get<string>(
       `otp-${user.id}`,
     );
     console.log(cachedOtp, otp);
 
-    if (!cachedOtp || cachedOtp !== otp.toString()) {
+    if (!cachedOtp || parseInt(cachedOtp) !== otp) {
       throw new ForbiddenException('Expired or Incorrect OTP!');
     }
-    // await this.db.user.update({
-    //   where: {
-    //     id: user.id,
-    //   },
-    //   data: {
-    //     verified: true,
-    //   },
-    // });
-    return `Your account has been successfully verified`;
+    await this.db.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        verified: true,
+      },
+    });
+    return {
+      status: 'success',
+      message: 'Account verified successfully!',
+      statusCode: 200,
+    };
   }
 
   /**
-   * Sign JWT Token
+   * SIGN TOKEN
    * @param userId
    * @param email
    * @returns { token: string }
@@ -148,6 +149,31 @@ export class AuthService {
       secret,
     });
     return token;
+  }
+
+  /**
+   * RESEND OTP
+   * @param user
+   * @returns { status: string, message: string }
+   */
+  async resendOtp(user: User) {
+    if (!user)
+      throw new ForbiddenException('Please login to proceed!');
+
+    const { otp, otpExpiry } = generateOtp();
+    await this.cacheManager.set(`otp-${user.id}`, otp, otpExpiry);
+
+    // SEND OTP TO EMAIL
+    if (this.config.get('NODE_ENV') === 'production') {
+      await this.email.sendOtp(user, otp);
+    } else {
+      console.log('OTP', otp);
+    }
+
+    return {
+      status: 'success',
+      message: 'OTP sent to email. Please verify your account',
+    };
   }
 
   findAll() {

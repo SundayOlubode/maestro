@@ -4,7 +4,13 @@ import { UpdateWordDto } from './dto/update-word.dto';
 export declare class WordController {
     private readonly wordService;
     constructor(wordService: WordService);
-    create(createWordDto: CreateWordDto): string;
+    create(createWordDto: CreateWordDto, user: any): Promise<{
+        status: string;
+        message: string;
+        data: {
+            word: string;
+        };
+    }>;
     findAll(): string;
     findOne(id: string): string;
     update(id: string, updateWordDto: UpdateWordDto): string;

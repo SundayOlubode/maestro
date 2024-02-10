@@ -35,6 +35,8 @@ let AuthGuard = class AuthGuard {
             const payload = await this.jwtService.verifyAsync(token, {
                 secret: this.config.get('JWT_SECRET'),
             });
+            payload.id = payload.sub;
+            delete payload.sub;
             request['user'] = payload;
         }
         catch {

@@ -22,6 +22,7 @@ model User {
   verified Boolean @default(false)
 
   words Word[]
+  counters Counter[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -30,12 +31,32 @@ model User {
 model Word {
   id Int @id @default(autoincrement())
 
-  word String
-  definition String
-  examples String[]
+  word String @unique
+  meaning String
+  usages String[]
 
   users User[]
+  counters Counter[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+
+  @@index([word])
+}
+
+model Counter {
+  id Int @id @default(autoincrement())
+  
+  user_id Int
+  user User @relation(fields: [user_id], references: [id])
+
+  word_id Int
+  word Word @relation(fields: [word_id], references: [id])
+
+  countdown Int @default(40)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([user_id])
 }

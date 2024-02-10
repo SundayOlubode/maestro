@@ -10,6 +10,9 @@ import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { IS_PUBLIC_KEY } from '../decorator';
 
+/**
+ * AUTH GUARD
+ */
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
@@ -19,7 +22,7 @@ export class AuthGuard implements CanActivate {
   ) {}
 
   /**
-   * Check if user is authenticated
+   * CHECK USER AUTHENTICATION
    * @param context
    * @returns {Promise<boolean>}
    */
@@ -29,7 +32,6 @@ export class AuthGuard implements CanActivate {
       [context.getHandler(), context.getClass()],
     );
     if (isPublic) {
-      // 💡 See this condition
       return true;
     }
 
@@ -43,6 +45,10 @@ export class AuthGuard implements CanActivate {
       const payload = await this.jwtService.verifyAsync(token, {
         secret: this.config.get('JWT_SECRET'),
       });
+
+      payload.id = payload.sub;
+      delete payload.sub;
+
       request['user'] = payload;
     } catch {
       throw new UnauthorizedException();
@@ -50,6 +56,11 @@ export class AuthGuard implements CanActivate {
     return true;
   }
 
+  /**
+   * EXTRACT TOKEN FROM HEADER
+   * @param request
+   * @returns {token: string | undefined}
+   */
   private extractTokenFromHeader(
     request: Request,
   ): string | undefined {

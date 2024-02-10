@@ -9,34 +9,21 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.JwtStrategy = void 0;
+exports.OpenaiService = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
-const passport_1 = require("@nestjs/passport");
-const passport_jwt_1 = require("passport-jwt");
-const database_service_1 = require("../../database/database.service");
-let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(passport_jwt_1.Strategy, "jwt") {
-    constructor(config, db) {
+const openai_1 = require("openai");
+let OpenaiService = class OpenaiService extends openai_1.OpenAI {
+    constructor(config) {
         super({
-            jwtFromRequest: passport_jwt_1.ExtractJwt.fromAuthHeaderAsBearerToken(),
-            secretOrKey: config.get("JWT_SECRET"),
+            apiKey: config.get('OPENAI_API_KEY'),
         });
-        this.db = db;
-    }
-    async validate(payload) {
-        const user = await this.db.user.findUnique({
-            where: {
-                id: payload.sub,
-            },
-        });
-        delete user.password;
-        return user;
+        this.config = config;
     }
 };
-exports.JwtStrategy = JwtStrategy;
-exports.JwtStrategy = JwtStrategy = __decorate([
+exports.OpenaiService = OpenaiService;
+exports.OpenaiService = OpenaiService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [config_1.ConfigService,
-        database_service_1.DatabaseService])
-], JwtStrategy);
-//# sourceMappingURL=jwt.strategy.js.map
+    __metadata("design:paramtypes", [config_1.ConfigService])
+], OpenaiService);
+//# sourceMappingURL=openai.service.js.map

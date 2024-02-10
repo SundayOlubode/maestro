@@ -1,1 +1,1 @@
-{"version":3,"file":"create-word.dto.js","sourceRoot":"","sources":["../../../src/word/dto/create-word.dto.ts"],"names":[],"mappings":";;;;;;;;;;;;AAAA,qDAAgE;AAEhE,MAAa,aAAa;CAIzB;AAJD,sCAIC;AADC;IAFC,IAAA,4BAAU,GAAE;IACZ,IAAA,0BAAQ,GAAE;;2CACE"}
+{"version":3,"file":"create-word.dto.js","sourceRoot":"","sources":["../../../src/word/dto/create-word.dto.ts"],"names":[],"mappings":";;;;;;;;;;;;AAAA,qDAAuD;AAEvD,MAAa,aAAa;CAIzB;AAJD,sCAIC;AADC;IAFC,IAAA,4BAAU,GAAE;IACZ,IAAA,0BAAQ,GAAE;;2CACE"}

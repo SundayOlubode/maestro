@@ -1,15 +1,24 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { WordService } from './word.service';
 import { CreateWordDto } from './dto/create-word.dto';
 import { UpdateWordDto } from './dto/update-word.dto';
+import { GetUser } from 'src/auth/decorator';
 
 @Controller('word')
 export class WordController {
   constructor(private readonly wordService: WordService) {}
 
   @Post()
-  create(@Body() createWordDto: CreateWordDto) {
-    return this.wordService.create(createWordDto);
+  create(@Body() createWordDto: CreateWordDto, @GetUser() user: any) {
+    return this.wordService.create(createWordDto, user);
   }
 
   @Get()
@@ -23,7 +32,10 @@ export class WordController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateWordDto: UpdateWordDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateWordDto: UpdateWordDto,
+  ) {
     return this.wordService.update(+id, updateWordDto);
   }
 

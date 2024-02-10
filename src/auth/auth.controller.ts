@@ -1,11 +1,8 @@
 import {
   Controller,
-  Get,
   Post,
   Body,
   Patch,
-  Param,
-  Delete,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -38,5 +35,11 @@ export class AuthController {
   @UseGuards(AuthGuard)
   verify(@Body('otp') otp: number, @GetUser() user: User) {
     return this.authService.verify(otp, user);
+  }
+
+  @Patch('resend-otp')
+  @UseGuards(AuthGuard)
+  resendOtp(@GetUser() user: User) {
+    return this.authService.resendOtp(user);
   }
 }

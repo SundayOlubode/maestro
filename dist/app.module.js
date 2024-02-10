@@ -20,6 +20,9 @@ const cache_manager_1 = require("@nestjs/cache-manager");
 const core_1 = require("@nestjs/core");
 const guard_1 = require("./auth/guard");
 const jwt_1 = require("@nestjs/jwt");
+const exception_module_1 = require("./exception/exception.module");
+const exception_service_1 = require("./exception/exception.service");
+const openai_module_1 = require("./openai/openai.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -42,6 +45,8 @@ exports.AppModule = AppModule = __decorate([
             cache_manager_1.CacheModule.register({
                 isGlobal: true,
             }),
+            exception_module_1.ExceptionModule,
+            openai_module_1.OpenaiModule,
         ],
         controllers: [],
         providers: [
@@ -53,6 +58,10 @@ exports.AppModule = AppModule = __decorate([
             {
                 provide: core_1.APP_GUARD,
                 useClass: guard_1.AuthGuard,
+            },
+            {
+                provide: core_1.APP_FILTER,
+                useClass: exception_service_1.ExceptionService,
             },
         ],
     })

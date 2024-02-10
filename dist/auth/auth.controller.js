@@ -33,6 +33,9 @@ let AuthController = class AuthController {
     verify(otp, user) {
         return this.authService.verify(otp, user);
     }
+    resendOtp(user) {
+        return this.authService.resendOtp(user);
+    }
 };
 exports.AuthController = AuthController;
 __decorate([
@@ -61,6 +64,14 @@ __decorate([
     __metadata("design:paramtypes", [Number, user_entity_1.User]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "verify", null);
+__decorate([
+    (0, common_1.Patch)('resend-otp'),
+    (0, common_1.UseGuards)(guard_1.AuthGuard),
+    __param(0, (0, decorator_1.GetUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [user_entity_1.User]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "resendOtp", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService])
