@@ -8,7 +8,14 @@ export declare class WordController {
         status: string;
         message: string;
         data: {
-            word: string;
+            word: string | {
+                id: number;
+                word: string;
+                meaning: string;
+                usages: string[];
+                created_at: Date;
+                updated_at: Date;
+            };
         };
     }>;
     findAll(): string;

@@ -40,17 +40,15 @@ export class WordService {
 
     if (wordExists) {
       await this.updateWordUsersAndCounter(wordExists, user);
-      return {
-        status: 'success',
-        message: 'Word created successfully',
-        data: {
-          word,
-        },
-      };
+      return this.WordCreateResponse(word);
     }
 
     await this.generateWordMeaningAndUsages(word, user);
 
+    return this.WordCreateResponse(word);
+  }
+
+  private WordCreateResponse(word: string | Word) {
     return {
       status: 'success',
       message: 'Word created successfully',
@@ -82,7 +80,7 @@ export class WordService {
 
       if (result) {
         console.log('Result', result);
-        // fs.appendFileSync('word-meaning-and-usages.txt', result);
+        fs.appendFileSync('word-meaning-and-usages.txt', result);
 
         const meaningRegex = /Meaning:(.*?)(?=Sentences:)/s;
         const usageRegex = /Sentences:(.*)/s;
@@ -107,6 +105,14 @@ export class WordService {
                 id: user.id,
               },
             },
+          },
+        });
+
+        // CREATE COUNTER
+        await this.db.counter.create({
+          data: {
+            user_id: user.id,
+            word_id: word.id,
           },
         });
         clearInterval(intervalId);

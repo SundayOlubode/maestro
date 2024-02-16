@@ -12,9 +12,17 @@ export declare class WordService {
         status: string;
         message: string;
         data: {
-            word: string;
+            word: string | {
+                id: number;
+                word: string;
+                meaning: string;
+                usages: string[];
+                created_at: Date;
+                updated_at: Date;
+            };
         };
     }>;
+    private WordCreateResponse;
     private generateWordMeaningAndUsages;
     private updateWordUsersAndCounter;
     findAll(): string;

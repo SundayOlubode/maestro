@@ -14,6 +14,7 @@ const common_1 = require("@nestjs/common");
 const database_service_1 = require("../database/database.service");
 const openai_service_1 = require("../openai/openai.service");
 const config_1 = require("@nestjs/config");
+const fs = require("fs");
 const constants_1 = require("../constants");
 let WordService = class WordService {
     constructor(db, openai, config) {
@@ -33,15 +34,12 @@ let WordService = class WordService {
         });
         if (wordExists) {
             await this.updateWordUsersAndCounter(wordExists, user);
-            return {
-                status: 'success',
-                message: 'Word created successfully',
-                data: {
-                    word,
-                },
-            };
+            return this.WordCreateResponse(word);
         }
         await this.generateWordMeaningAndUsages(word, user);
+        return this.WordCreateResponse(word);
+    }
+    WordCreateResponse(word) {
         return {
             status: 'success',
             message: 'Word created successfully',
@@ -65,6 +63,7 @@ let WordService = class WordService {
             const result = lastMessage.content[0]['text']['value'];
             if (result) {
                 console.log('Result', result);
+                fs.appendFileSync('word-meaning-and-usages.txt', result);
                 const meaningRegex = /Meaning:(.*?)(?=Sentences:)/s;
                 const usageRegex = /Sentences:(.*)/s;
                 const sentenceRegex = /\d+\. "(.*?)"/g;
@@ -85,6 +84,12 @@ let WordService = class WordService {
                                 id: user.id,
                             },
                         },
+                    },
+                });
+                await this.db.counter.create({
+                    data: {
+                        user_id: user.id,
+                        word_id: word.id,
                     },
                 });
                 clearInterval(intervalId);
