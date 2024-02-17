@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>Word Usage Email</title>
+  </head>
+  <body>
+    <div>
+      <% words.forEach(wordData => { %>
+      <div>
+        <h2><%= wordData.word.word %></h2>
+        <p><strong>Meaning:</strong> <%= wordData.word.meaning %></p>
+        <ul>
+          <% wordData.word.usages.forEach(usage => { %>
+          <li><%= usage %></li>
+          <% }); %>
+        </ul>
+      </div>
+      <% }); %>
+    </div>
+  </body>
+</html>

@@ -8,8 +8,19 @@ export declare class WordController {
         status: string;
         message: string;
         data: {
-            word: string;
+            word: string | {
+                id: number;
+                word: string;
+                meaning: string;
+                usages: string[];
+                created_at: Date;
+                updated_at: Date;
+            };
         };
+    }>;
+    sendWordUsagesToUsers(): Promise<{
+        status: string;
+        message: string;
     }>;
     findAll(): string;
     findOne(id: string): string;

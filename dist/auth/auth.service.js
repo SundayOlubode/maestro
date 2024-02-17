@@ -39,12 +39,7 @@ let AuthService = class AuthService {
         const accessToken = await this.signToken(user.id, user.email);
         const { otp, otpExpiry } = (0, common_2.generateOtp)();
         await this.cacheManager.set(`otp-${user.id}`, otp, otpExpiry);
-        if (this.config.get('NODE_ENV') === 'production') {
-            await this.email.sendOtp(user, otp);
-        }
-        else {
-            console.log('OTP', otp);
-        }
+        await this.email.sendOtp(user, otp);
         return {
             status: 'success',
             message: 'OTP sent to email. Please verify your account',

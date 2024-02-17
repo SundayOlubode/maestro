@@ -13,18 +13,19 @@ exports.WordService = void 0;
 const common_1 = require("@nestjs/common");
 const database_service_1 = require("../database/database.service");
 const openai_service_1 = require("../openai/openai.service");
-const config_1 = require("@nestjs/config");
+const fs = require("fs");
 const constants_1 = require("../constants");
+const email_service_1 = require("../email/email.service");
 let WordService = class WordService {
-    constructor(db, openai, config) {
+    constructor(db, openai, emailService) {
         this.db = db;
         this.openai = openai;
-        this.config = config;
+        this.emailService = emailService;
     }
     async create(dto, user) {
         let word = dto.word.toLowerCase();
         if (!constants_1.EnglishWords.check(word)) {
-            throw new common_1.BadRequestException(`${word} is not a valid English word`);
+            throw new common_1.BadRequestException(`${dto.word} is not a valid English word`);
         }
         const wordExists = await this.db.word.findFirst({
             where: {
@@ -33,15 +34,12 @@ let WordService = class WordService {
         });
         if (wordExists) {
             await this.updateWordUsersAndCounter(wordExists, user);
-            return {
-                status: 'success',
-                message: 'Word created successfully',
-                data: {
-                    word,
-                },
-            };
+            return this.WordCreateResponse(word);
         }
         await this.generateWordMeaningAndUsages(word, user);
+        return this.WordCreateResponse(word);
+    }
+    WordCreateResponse(word) {
         return {
             status: 'success',
             message: 'Word created successfully',
@@ -51,45 +49,55 @@ let WordService = class WordService {
         };
     }
     async generateWordMeaningAndUsages(wordText, user) {
-        const threadId = constants_1.DEV_THREAD_ID;
+        const threadId = constants_1.NODE_ENV === 'development' ? constants_1.DEV_THREAD_ID : constants_1.THREAD_ID;
         await this.openai.beta.threads.messages.create(threadId, {
             role: 'user',
             content: wordText,
         });
         await this.openai.beta.threads.runs.create(threadId, {
-            assistant_id: constants_1.DEV_ASST_ID,
+            assistant_id: constants_1.NODE_ENV === 'development' ? constants_1.DEV_ASST_ID : constants_1.ASST_ID,
         });
         const intervalId = setInterval(async () => {
             const response = await this.openai.beta.threads.messages.list(threadId);
             const lastMessage = response.data[0];
             const result = lastMessage.content[0]['text']['value'];
             if (result) {
-                console.log('Result', result);
-                const meaningRegex = /Meaning:(.*?)(?=Sentences:)/s;
-                const usageRegex = /Sentences:(.*)/s;
-                const sentenceRegex = /\d+\. "(.*?)"/g;
-                const meaning = result.match(meaningRegex)[1].trim();
-                const usageMatch = result.match(usageRegex)[1].trim();
-                const usages = [];
-                let match;
-                while ((match = sentenceRegex.exec(usageMatch)) !== null) {
-                    usages.push(match[1].trim());
-                }
-                const word = await this.db.word.create({
-                    data: {
-                        word: wordText,
-                        meaning,
-                        usages,
-                        users: {
-                            connect: {
-                                id: user.id,
-                            },
-                        },
-                    },
-                });
+                await this.createWordFromAIResult(result, wordText, user);
                 clearInterval(intervalId);
             }
         }, 20000);
+        return;
+    }
+    async createWordFromAIResult(result, wordText, user) {
+        fs.appendFileSync('word-meaning-and-usages.txt', result + '\n');
+        const meaningRegex = /Meaning:(.*?)(?=Sentences:)/s;
+        const usageRegex = /Sentences:(.*)/s;
+        const sentenceRegex = /\d+\. "(.*?)"/g;
+        const meaning = result.match(meaningRegex)[1].trim();
+        const usageMatch = result.match(usageRegex)[1].trim();
+        const usages = [];
+        let match;
+        while ((match = sentenceRegex.exec(usageMatch)) !== null) {
+            usages.push(match[1].trim());
+        }
+        await this.db.word.create({
+            data: {
+                word: wordText,
+                meaning,
+                usages,
+                users: {
+                    connect: {
+                        id: user.id,
+                    },
+                },
+                counters: {
+                    create: {
+                        user_id: user.id,
+                        countdown: constants_1.NODE_ENV === 'development' ? 10 : undefined,
+                    },
+                },
+            },
+        });
         return;
     }
     async updateWordUsersAndCounter(word, user) {
@@ -113,6 +121,67 @@ let WordService = class WordService {
         });
         return;
     }
+    async sendWordUsagesToUsers() {
+        const users = await this.findUsersFromCounters();
+        const totalCounters = [];
+        let allWords = {};
+        await this.selectWordUsers(users, totalCounters, allWords);
+        await this.emailService.sendWordUsagesToUsers(allWords);
+        await this.decrementCounters(totalCounters);
+        return {
+            status: 'success',
+            message: 'Word usages sent successfully',
+        };
+    }
+    async findUsersFromCounters() {
+        const users = await this.db.counter.findMany({
+            distinct: ['user_id'],
+            select: {
+                user_id: true,
+                user: true,
+            },
+            where: {
+                countdown: {
+                    gt: 0,
+                },
+            },
+        });
+        return users;
+    }
+    async selectWordUsers(users, totalCounters, allWords) {
+        for (let user of users) {
+            const counters = await this.db.counter.findMany({
+                where: {
+                    user_id: user.user_id,
+                },
+                select: {
+                    id: true,
+                    word: true,
+                    countdown: true,
+                },
+                orderBy: {
+                    countdown: 'asc',
+                },
+                take: 3,
+            });
+            allWords[user.user.email] = counters;
+            totalCounters.push(...counters);
+        }
+        return;
+    }
+    async decrementCounters(counters) {
+        for (let counter of counters) {
+            await this.db.counter.update({
+                where: {
+                    id: counter.id,
+                },
+                data: {
+                    countdown: counter.countdown - constants_1.NUMWORDUSAGES,
+                },
+            });
+        }
+        return;
+    }
     findAll() {
         return `This action returns all word`;
     }
@@ -131,6 +200,6 @@ exports.WordService = WordService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [database_service_1.DatabaseService,
         openai_service_1.OpenaiService,
-        config_1.ConfigService])
+        email_service_1.EmailService])
 ], WordService);
 //# sourceMappingURL=word.service.js.map

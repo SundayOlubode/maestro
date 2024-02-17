@@ -12,19 +12,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.EmailService = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
-const Config = new config_1.ConfigService();
+const ejs_1 = require("ejs");
 const FormData = require("form-data");
 const mailgun_js_1 = require("mailgun.js");
+const constants_1 = require("../constants");
 const mailgun = new mailgun_js_1.default(FormData);
 const mailgunClientOptions = {
-    username: "api",
-    key: Config.get("MAILGUN_API_KEY"),
+    username: 'api',
+    key: constants_1.MAILGUN_API_KEY,
 };
 const mg = mailgun.client(mailgunClientOptions);
 let EmailService = class EmailService {
     constructor(configService) {
         this.configService = configService;
-        this.from = `Maestro <no-reply@maestroapi.com>`;
+        this.from = constants_1.MAESTROSENDER;
     }
     async send(template, subject, user, otp) {
         const data = {
@@ -32,20 +33,46 @@ let EmailService = class EmailService {
             to: user.email,
             template,
             subject,
-            "h:X-Mailgun-Variables": JSON.stringify({
+            'h:X-Mailgun-Variables': JSON.stringify({
                 firstname: user.firstname,
                 otp,
             }),
         };
         try {
-            await mg.messages.create(Config.get("DOMAIN"), data);
+            console.log(constants_1.MAILGUN_API_KEY);
+            await mg.messages.create(constants_1.EMAIL_DOMAIN, data);
         }
         catch (error) {
             console.log(error);
         }
     }
     async sendOtp(user, otp) {
-        await this.send("maestro-otp", "OTP! Verify Your Account", user, otp);
+        await this.send('maestro-otp', 'OTP! Verify Your Account', user, otp);
+    }
+    async sendWordUsagesToUsers(allWords) {
+        const subject = 'Word Usages';
+        for (const email in allWords) {
+            let words = allWords[email];
+            words.forEach((wordData) => {
+                const SLICEBEGIN = wordData.countdown - constants_1.NUMWORDUSAGES;
+                const SLICEEND = wordData.countdown;
+                wordData.word.usages = wordData.word.usages.slice(SLICEBEGIN, SLICEEND);
+            });
+            let html;
+            const pathname = `${__dirname}/../../src/email/views/wordusages.ejs`;
+            (0, ejs_1.renderFile)(pathname, {
+                words,
+            }, function (err, data) {
+                html = data;
+            });
+            const mailOptions = {
+                from: this.from,
+                to: email,
+                subject,
+                html,
+            };
+            await mg.messages.create(constants_1.EMAIL_DOMAIN, mailOptions);
+        }
     }
 };
 exports.EmailService = EmailService;

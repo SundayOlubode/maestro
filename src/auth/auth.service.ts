@@ -48,11 +48,11 @@ export class AuthService {
     await this.cacheManager.set(`otp-${user.id}`, otp, otpExpiry);
 
     // SEND OTP TO EMAIL
-    if (this.config.get('NODE_ENV') === 'production') {
-      await this.email.sendOtp(user, otp);
-    } else {
-      console.log('OTP', otp);
-    }
+    // if (this.config.get('NODE_ENV') === 'production') {
+    await this.email.sendOtp(user, otp);
+    // } else {
+    //   console.log('OTP', otp);
+    // }
 
     return {
       status: 'success',

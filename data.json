@@ -1,0 +1,73 @@
+{
+  "words": [
+    {
+      "id": 1,
+      "word": {
+        "id": 1,
+        "word": "finesse",
+        "meaning": "Finesse is the skill, cleverness, and grace in handling situations or in performing tasks, often in a delicate or intricate manner. It can also refer to refinement or delicacy of workmanship, structure, or texture.",
+        "usages": [
+          "With finesse and diplomacy, he settled the argument, leaving everyone feeling satisfied.",
+          "She displayed great finesse in dealing with the challenging customer.",
+          "The finesse with which he completed the painting was extraordinary.",
+          "The chef handled the knife with such finesse that it was like watching an artist at work.",
+          "The dancer’s finesse was visible in every fluid movement she made.",
+          "He negotiated the business deal with finesse, smoothing over potential difficulties.",
+          "Her finesse in crafting beautiful sentences made her work a delight to read.",
+          "Despite the tensions in the room, he managed the meeting with finesse.",
+          "The surgeon performed the complex operation with impressive finesse.",
+          "The great finesse of the violinist's technique left the audience in awe."
+        ],
+        "created_at": "2024-02-16T17:28:32.753Z",
+        "updated_at": "2024-02-16T17:28:32.753Z"
+      },
+      "countdown": 40
+    },
+    {
+      "id": 2,
+      "word": {
+        "id": 2,
+        "word": "tremendous",
+        "meaning": "Tremendous is an adjective used to describe something that is very great in amount, scale, or intensity. It may also mean surprisingly excellent or impressive.",
+        "usages": [
+          "The television series received tremendous public and critical acclaim, propelling its creators into fame.",
+          "She put in a tremendous effort to ensure the project's success.",
+          "The movie's tremendous impact on the audience led to it being sold out for weeks.",
+          "The soccer team's tremendous performance led them to win the championship.",
+          "He has tremendous respect for his parents, who have supported him all his life.",
+          "The new camera has a tremendous range of features that appeal to professional photographers.",
+          "After weeks of practicing, she delivered a tremendous performance at the piano recital.",
+          "He lifted the tremendous weight with such ease that he surprised everyone at the gym.",
+          "This charity has done tremendous work in supporting the homeless community.",
+          "A tremendous storm raged overnight, causing delays in transportation schedules."
+        ],
+        "created_at": "2024-02-16T17:43:10.786Z",
+        "updated_at": "2024-02-16T17:43:10.786Z"
+      },
+      "countdown": 40
+    },
+    {
+      "id": 3,
+      "word": {
+        "id": 3,
+        "word": "cautious",
+        "meaning": "Cautious is an adjective that describes someone who carefully avoids potential problems or dangers. It is the tendency to act with care, prudence or discretion to avoid risk or danger.",
+        "usages": [
+          "Being a cautious driver, he always checks his mirrors before changing lanes.",
+          "She was cautious about investing in the stock market because of its unpredictability.",
+          "Despite being a reputed rock climber, he is extremely cautious and double-checks all his equipment before a climb.",
+          "My mother always urged us to be cautious while crossing the street.",
+          "It's always better to be cautious while dealing with legal matters.",
+          "During the trial phase of the product, testers must be particularly cautious to observe any irregularities.",
+          "Despite the clear water, the lifeguard remained cautious, keeping a close eye on the swimmers.",
+          "Even though the deal seemed attractive, the businesswoman was cautious and decided to do more research.",
+          "The cautious hiker avoided the treacherously steep path and chose a more gentle slope.",
+          "Although he was excited to try snowboarding, he remained cautious while sliding down the hill for the first time."
+        ],
+        "created_at": "2024-02-16T17:47:59.318Z",
+        "updated_at": "2024-02-16T17:47:59.318Z"
+      },
+      "countdown": 40
+    }
+  ]
+}
