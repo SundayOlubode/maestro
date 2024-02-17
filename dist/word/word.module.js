@@ -11,6 +11,7 @@ const common_1 = require("@nestjs/common");
 const word_service_1 = require("./word.service");
 const word_controller_1 = require("./word.controller");
 const openai_service_1 = require("../openai/openai.service");
+const email_module_1 = require("../email/email.module");
 let WordModule = class WordModule {
 };
 exports.WordModule = WordModule;
@@ -18,6 +19,7 @@ exports.WordModule = WordModule = __decorate([
     (0, common_1.Module)({
         controllers: [word_controller_1.WordController],
         providers: [word_service_1.WordService, openai_service_1.OpenaiService],
+        imports: [email_module_1.EmailModule],
     })
 ], WordModule);
 //# sourceMappingURL=word.module.js.map

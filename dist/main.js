@@ -5,8 +5,12 @@ const app_module_1 = require("./app.module");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const exception_service_1 = require("./exception/exception.service");
+const path_1 = require("path");
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
+    app.useStaticAssets((0, path_1.join)(__dirname, '..', 'email'));
+    app.setBaseViewsDir((0, path_1.join)(__dirname, '..', 'views'));
+    app.setViewEngine('ejs');
     app.setGlobalPrefix('api');
     app.useGlobalPipes(new common_1.ValidationPipe());
     app.useGlobalFilters(new exception_service_1.ExceptionService());

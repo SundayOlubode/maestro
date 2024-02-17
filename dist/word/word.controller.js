@@ -25,6 +25,9 @@ let WordController = class WordController {
     create(createWordDto, user) {
         return this.wordService.create(createWordDto, user);
     }
+    sendWordUsagesToUsers() {
+        return this.wordService.sendWordUsagesToUsers();
+    }
     findAll() {
         return this.wordService.findAll();
     }
@@ -47,6 +50,13 @@ __decorate([
     __metadata("design:paramtypes", [create_word_dto_1.CreateWordDto, Object]),
     __metadata("design:returntype", void 0)
 ], WordController.prototype, "create", null);
+__decorate([
+    (0, decorator_1.Public)(),
+    (0, common_1.Get)('send'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], WordController.prototype, "sendWordUsagesToUsers", null);
 __decorate([
     (0, common_1.Get)(),
     __metadata("design:type", Function),

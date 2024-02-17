@@ -3,11 +3,13 @@ import { UpdateWordDto } from './dto/update-word.dto';
 import { DatabaseService } from 'src/database/database.service';
 import { OpenaiService } from 'src/openai/openai.service';
 import { ConfigService } from '@nestjs/config';
+import { EmailService } from 'src/email/email.service';
 export declare class WordService {
     private readonly db;
     private readonly openai;
     private readonly config;
-    constructor(db: DatabaseService, openai: OpenaiService, config: ConfigService);
+    private emailService;
+    constructor(db: DatabaseService, openai: OpenaiService, config: ConfigService, emailService: EmailService);
     create(dto: CreateWordDto, user: any): Promise<{
         status: string;
         message: string;
@@ -25,6 +27,7 @@ export declare class WordService {
     private WordCreateResponse;
     private generateWordMeaningAndUsages;
     private updateWordUsersAndCounter;
+    sendWordUsagesToUsers(): Promise<void>;
     findAll(): string;
     findOne(id: number): string;
     update(id: number, updateWordDto: UpdateWordDto): string;

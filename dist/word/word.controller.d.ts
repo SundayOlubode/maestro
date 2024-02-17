@@ -18,6 +18,7 @@ export declare class WordController {
             };
         };
     }>;
+    sendWordUsagesToUsers(): Promise<void>;
     findAll(): string;
     findOne(id: string): string;
     update(id: string, updateWordDto: UpdateWordDto): string;

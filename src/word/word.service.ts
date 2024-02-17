@@ -6,12 +6,16 @@ import { OpenaiService } from 'src/openai/openai.service';
 import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
 import {
+  ASST_ID,
   DEV_ASST_ID,
   DEV_THREAD_ID,
   EnglishWords,
+  NODE_ENV,
+  THREAD_ID,
 } from 'src/constants';
 import { Word } from '@prisma/client';
 import { User } from 'src/user/entities/user.entity';
+import { EmailService } from 'src/email/email.service';
 
 @Injectable()
 export class WordService {
@@ -19,6 +23,7 @@ export class WordService {
     private readonly db: DatabaseService,
     private readonly openai: OpenaiService,
     private readonly config: ConfigService,
+    private emailService: EmailService,
   ) {}
 
   async create(dto: CreateWordDto, user: any) {
@@ -27,7 +32,7 @@ export class WordService {
     // CHECK IF WORD IS A VALID ENGLISH WORD
     if (!EnglishWords.check(word)) {
       throw new BadRequestException(
-        `${word} is not a valid English word`,
+        `${dto.word} is not a valid English word`,
       );
     }
 
@@ -62,14 +67,16 @@ export class WordService {
     wordText: string,
     user: User,
   ) {
-    const threadId = DEV_THREAD_ID;
+    const threadId =
+      NODE_ENV === 'development' ? DEV_THREAD_ID : THREAD_ID;
 
     await this.openai.beta.threads.messages.create(threadId, {
       role: 'user',
       content: wordText,
     });
     await this.openai.beta.threads.runs.create(threadId, {
-      assistant_id: DEV_ASST_ID,
+      assistant_id:
+        NODE_ENV === 'development' ? DEV_ASST_ID : ASST_ID,
     });
 
     const intervalId = setInterval(async () => {
@@ -79,8 +86,10 @@ export class WordService {
       const result = lastMessage.content[0]['text']['value'];
 
       if (result) {
-        console.log('Result', result);
-        fs.appendFileSync('word-meaning-and-usages.txt', result);
+        fs.appendFileSync(
+          'word-meaning-and-usages.txt',
+          result + '\n',
+        );
 
         const meaningRegex = /Meaning:(.*?)(?=Sentences:)/s;
         const usageRegex = /Sentences:(.*)/s;
@@ -105,16 +114,16 @@ export class WordService {
                 id: user.id,
               },
             },
+            counters: {
+              create: {
+                user_id: user.id,
+                countdown:
+                  NODE_ENV === 'development' ? 10 : undefined,
+              },
+            },
           },
         });
 
-        // CREATE COUNTER
-        await this.db.counter.create({
-          data: {
-            user_id: user.id,
-            word_id: word.id,
-          },
-        });
         clearInterval(intervalId);
       }
     }, 20000);
@@ -146,6 +155,54 @@ export class WordService {
     });
 
     return;
+  }
+
+  async sendWordUsagesToUsers() {
+    // SELECT UNIQUE USER_ID ON COUNTER WHERE COUNTDOWN > 0
+    const users = await this.db.counter.findMany({
+      distinct: ['user_id'],
+      select: {
+        user_id: true,
+        user: true,
+      },
+      where: {
+        countdown: {
+          gt: 0,
+        },
+      },
+    });
+
+    const totalCounters = [];
+    let allWords: {
+      [key: string]: {
+        id: number;
+        countdown: number;
+        word: Word;
+      }[];
+    } = {};
+
+    for (let user of users) {
+      // SELECT ONLY WORD FIELD FROM COUNTER TABLE WHERE USER_ID = USERID
+      const counters = await this.db.counter.findMany({
+        where: {
+          user_id: user.user_id,
+        },
+        select: {
+          id: true,
+          word: true,
+          countdown: true,
+        },
+        orderBy: {
+          countdown: 'asc',
+        },
+        take: 3,
+      });
+
+      allWords[user.user.email] = counters;
+      totalCounters.push(...counters);
+    }
+
+    await this.emailService.sendWordUsagesToUsers(allWords);
   }
 
   findAll() {
