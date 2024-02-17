@@ -12,6 +12,7 @@ import {
   MAILGUN_API_KEY,
   NODE_ENV,
   EMAIL_DOMAIN,
+  NUMWORDUSAGES,
 } from 'src/constants';
 import { User } from 'src/user/entities/user.entity';
 const mailgun = new Mailgun(FormData);
@@ -22,7 +23,6 @@ const mailgunClientOptions: MailgunClientOptions = {
 };
 
 const mg = mailgun.client(mailgunClientOptions);
-const NUMWORDUSAGES = NODE_ENV === 'production' ? 8 : 5;
 
 @Injectable()
 export class EmailService {

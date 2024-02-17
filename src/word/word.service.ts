@@ -3,7 +3,6 @@ import { CreateWordDto } from './dto/create-word.dto';
 import { UpdateWordDto } from './dto/update-word.dto';
 import { DatabaseService } from 'src/database/database.service';
 import { OpenaiService } from 'src/openai/openai.service';
-import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
 import {
   ASST_ID,
@@ -11,18 +10,19 @@ import {
   DEV_THREAD_ID,
   EnglishWords,
   NODE_ENV,
+  NUMWORDUSAGES,
   THREAD_ID,
 } from 'src/constants';
-import { Word } from '@prisma/client';
+import { Counter, Word } from '@prisma/client';
 import { User } from 'src/user/entities/user.entity';
 import { EmailService } from 'src/email/email.service';
+import { AllWords } from 'src/common';
 
 @Injectable()
 export class WordService {
   constructor(
     private readonly db: DatabaseService,
     private readonly openai: OpenaiService,
-    private readonly config: ConfigService,
     private emailService: EmailService,
   ) {}
 
@@ -86,48 +86,48 @@ export class WordService {
       const result = lastMessage.content[0]['text']['value'];
 
       if (result) {
-        fs.appendFileSync(
-          'word-meaning-and-usages.txt',
-          result + '\n',
-        );
-
-        const meaningRegex = /Meaning:(.*?)(?=Sentences:)/s;
-        const usageRegex = /Sentences:(.*)/s;
-        const sentenceRegex = /\d+\. "(.*?)"/g;
-
-        const meaning: string = result.match(meaningRegex)[1].trim();
-        const usageMatch = result.match(usageRegex)[1].trim();
-        const usages = [];
-        let match;
-        while ((match = sentenceRegex.exec(usageMatch)) !== null) {
-          usages.push(match[1].trim());
-        }
-
-        // CREATE WORD
-        const word = await this.db.word.create({
-          data: {
-            word: wordText,
-            meaning,
-            usages,
-            users: {
-              connect: {
-                id: user.id,
-              },
-            },
-            counters: {
-              create: {
-                user_id: user.id,
-                countdown:
-                  NODE_ENV === 'development' ? 10 : undefined,
-              },
-            },
-          },
-        });
-
+        await this.createWordFromAIResult(result, wordText, user);
         clearInterval(intervalId);
       }
     }, 20000);
 
+    return;
+  }
+
+  private async createWordFromAIResult(result, wordText, user) {
+    fs.appendFileSync('word-meaning-and-usages.txt', result + '\n');
+
+    const meaningRegex = /Meaning:(.*?)(?=Sentences:)/s;
+    const usageRegex = /Sentences:(.*)/s;
+    const sentenceRegex = /\d+\. "(.*?)"/g;
+
+    const meaning: string = result.match(meaningRegex)[1].trim();
+    const usageMatch = result.match(usageRegex)[1].trim();
+    const usages = [];
+    let match;
+    while ((match = sentenceRegex.exec(usageMatch)) !== null) {
+      usages.push(match[1].trim());
+    }
+
+    // CREATE WORD
+    await this.db.word.create({
+      data: {
+        word: wordText,
+        meaning,
+        usages,
+        users: {
+          connect: {
+            id: user.id,
+          },
+        },
+        counters: {
+          create: {
+            user_id: user.id,
+            countdown: NODE_ENV === 'development' ? 10 : undefined,
+          },
+        },
+      },
+    });
     return;
   }
 
@@ -158,6 +158,22 @@ export class WordService {
   }
 
   async sendWordUsagesToUsers() {
+    const users = await this.findUsersFromCounters();
+
+    const totalCounters: Counter[] = [];
+    let allWords: AllWords = {};
+
+    await this.selectWordUsers(users, totalCounters, allWords);
+    await this.emailService.sendWordUsagesToUsers(allWords);
+    await this.decrementCounters(totalCounters);
+
+    return {
+      status: 'success',
+      message: 'Word usages sent successfully',
+    };
+  }
+
+  private async findUsersFromCounters() {
     // SELECT UNIQUE USER_ID ON COUNTER WHERE COUNTDOWN > 0
     const users = await this.db.counter.findMany({
       distinct: ['user_id'],
@@ -171,16 +187,10 @@ export class WordService {
         },
       },
     });
+    return users;
+  }
 
-    const totalCounters = [];
-    let allWords: {
-      [key: string]: {
-        id: number;
-        countdown: number;
-        word: Word;
-      }[];
-    } = {};
-
+  private async selectWordUsers(users, totalCounters, allWords) {
     for (let user of users) {
       // SELECT ONLY WORD FIELD FROM COUNTER TABLE WHERE USER_ID = USERID
       const counters = await this.db.counter.findMany({
@@ -201,8 +211,21 @@ export class WordService {
       allWords[user.user.email] = counters;
       totalCounters.push(...counters);
     }
+    return;
+  }
 
-    await this.emailService.sendWordUsagesToUsers(allWords);
+  private async decrementCounters(counters) {
+    for (let counter of counters) {
+      await this.db.counter.update({
+        where: {
+          id: counter.id,
+        },
+        data: {
+          countdown: counter.countdown - NUMWORDUSAGES,
+        },
+      });
+    }
+    return;
   }
 
   findAll() {

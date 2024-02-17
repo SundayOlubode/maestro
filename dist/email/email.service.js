@@ -22,7 +22,6 @@ const mailgunClientOptions = {
     key: constants_1.MAILGUN_API_KEY,
 };
 const mg = mailgun.client(mailgunClientOptions);
-const NUMWORDUSAGES = constants_1.NODE_ENV === 'production' ? 8 : 5;
 let EmailService = class EmailService {
     constructor(configService) {
         this.configService = configService;
@@ -55,7 +54,7 @@ let EmailService = class EmailService {
         for (const email in allWords) {
             let words = allWords[email];
             words.forEach((wordData) => {
-                const SLICEBEGIN = wordData.countdown - NUMWORDUSAGES;
+                const SLICEBEGIN = wordData.countdown - constants_1.NUMWORDUSAGES;
                 const SLICEEND = wordData.countdown;
                 wordData.word.usages = wordData.word.usages.slice(SLICEBEGIN, SLICEEND);
             });

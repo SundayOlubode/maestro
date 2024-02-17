@@ -10,3 +10,4 @@ export declare const EMAIL_DOMAIN: string;
 export declare const NODE_ENV: string;
 export declare const MAESTROSENDER: string;
 export declare const EnglishWords: any;
+export declare const NUMWORDUSAGES: number;

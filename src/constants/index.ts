@@ -12,3 +12,4 @@ export const MAESTROSENDER = process.env.MAESTROSENDER;
 
 import * as checkWord from 'check-if-word';
 export const EnglishWords = checkWord('en');
+export const NUMWORDUSAGES = NODE_ENV === 'production' ? 8 : 5;
