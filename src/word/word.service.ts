@@ -7,6 +7,7 @@ import * as fs from 'fs';
 import {
   EnglishWords,
   NODE_ENV,
+  NUM_WORD_TO_GEN,
   NUMWORDUSAGES,
   SYSTEM_CONTENT,
 } from 'src/constants';
@@ -24,7 +25,7 @@ export class WordService {
     private emailService: EmailService,
   ) {}
 
-  async create(dto: CreateWordDto, user: any) {
+  async create(dto: CreateWordDto, user: User) {
     let word: string | Word = dto.word.toLowerCase();
 
     // CHECK IF WORD IS A VALID ENGLISH WORD
@@ -38,6 +39,13 @@ export class WordService {
     const wordExists = await this.db.word.findFirst({
       where: {
         word,
+      },
+      include: {
+        users: {
+          select: {
+            id: true,
+          },
+        },
       },
     });
 
@@ -88,10 +96,10 @@ export class WordService {
 
       if (response) {
         await this.createWordFromAIResult(response, wordText, user);
-        console.log('Word created successfully', response[100]);
+        console.log('Word created successfully');
         clearInterval(intervalId);
       }
-    }, 20000);
+    }, 2000);
 
     return;
   }
@@ -128,7 +136,7 @@ export class WordService {
         counters: {
           create: {
             user_id: user.id,
-            countdown: NODE_ENV === 'development' ? 10 : 40,
+            countdown: NUM_WORD_TO_GEN,
           },
         },
       },
@@ -137,6 +145,22 @@ export class WordService {
   }
 
   private async updateWordUsersAndCounter(word: Word, user: User) {
+    //@ts-ignore
+    if (word.users.find((u) => u.id === user.id)) {
+      // IF WORD EXISTS AND USER ALREADY CREATED IT, RESET WORD COUNTER FOR USER
+      await this.db.counter.updateMany({
+        where: {
+          user_id: user.id,
+          word_id: word.id,
+        },
+        data: {
+          countdown: NUM_WORD_TO_GEN,
+        },
+      });
+
+      return;
+    }
+
     // UPDATE WORD USERS
     await this.db.word.update({
       where: {
@@ -156,6 +180,7 @@ export class WordService {
       data: {
         user_id: user.id,
         word_id: word.id,
+        countdown: NUM_WORD_TO_GEN,
       },
     });
 

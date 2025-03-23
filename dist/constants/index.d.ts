@@ -10,6 +10,7 @@ export declare const EMAIL_DOMAIN: string;
 export declare const NODE_ENV: string;
 export declare const MAESTROSENDER: string;
 export declare const RESEND_API_KEY: string;
-export declare const SYSTEM_CONTENT: string;
 export declare const EnglishWords: any;
 export declare const NUMWORDUSAGES: number;
+export declare const NUM_WORD_TO_GEN: number;
+export declare const SYSTEM_CONTENT: string;

@@ -32,6 +32,13 @@ let WordService = class WordService {
             where: {
                 word,
             },
+            include: {
+                users: {
+                    select: {
+                        id: true,
+                    },
+                },
+            },
         });
         if (wordExists) {
             await this.updateWordUsersAndCounter(wordExists, user);
@@ -70,10 +77,10 @@ let WordService = class WordService {
             const response = await this.createWordUsagesFromGPT(wordText);
             if (response) {
                 await this.createWordFromAIResult(response, wordText, user);
-                console.log('Word created successfully', response[100]);
+                console.log('Word created successfully');
                 clearInterval(intervalId);
             }
-        }, 20000);
+        }, 2000);
         return;
     }
     async createWordFromAIResult(result, wordText, user) {
@@ -102,7 +109,7 @@ let WordService = class WordService {
                 counters: {
                     create: {
                         user_id: user.id,
-                        countdown: constants_1.NODE_ENV === 'development' ? 10 : 40,
+                        countdown: constants_1.NUM_WORD_TO_GEN,
                     },
                 },
             },
@@ -110,6 +117,18 @@ let WordService = class WordService {
         return;
     }
     async updateWordUsersAndCounter(word, user) {
+        if (word.users.find((u) => u.id === user.id)) {
+            await this.db.counter.updateMany({
+                where: {
+                    user_id: user.id,
+                    word_id: word.id,
+                },
+                data: {
+                    countdown: constants_1.NUM_WORD_TO_GEN,
+                },
+            });
+            return;
+        }
         await this.db.word.update({
             where: {
                 id: word.id,
@@ -126,6 +145,7 @@ let WordService = class WordService {
             data: {
                 user_id: user.id,
                 word_id: word.id,
+                countdown: constants_1.NUM_WORD_TO_GEN,
             },
         });
         return;

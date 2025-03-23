@@ -2,13 +2,14 @@ import { CreateWordDto } from './dto/create-word.dto';
 import { UpdateWordDto } from './dto/update-word.dto';
 import { DatabaseService } from 'src/database/database.service';
 import { OpenaiService } from 'src/openai/openai.service';
+import { User } from 'src/user/entities/user.entity';
 import { EmailService } from 'src/email/email.service';
 export declare class WordService {
     private readonly db;
     private readonly openai;
     private emailService;
     constructor(db: DatabaseService, openai: OpenaiService, emailService: EmailService);
-    create(dto: CreateWordDto, user: any): Promise<{
+    create(dto: CreateWordDto, user: User): Promise<{
         status: string;
         message: string;
         data: {
