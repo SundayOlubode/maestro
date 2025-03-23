@@ -11,17 +11,17 @@ datasource db {
 }
 
 model User {
-  id  Int @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
   firstname String
-  lastname String
+  lastname  String
 
-  email String @unique
+  email    String @unique
   password String
 
   verified Boolean @default(false)
 
-  words Word[]
+  words    Word[]
   counters Counter[]
 
   created_at DateTime @default(now())
@@ -31,11 +31,11 @@ model User {
 model Word {
   id Int @id @default(autoincrement())
 
-  word String @unique
+  word    String   @unique
   meaning String
-  usages String[]
+  usages  String[]
 
-  users User[]
+  users    User[]
   counters Counter[]
 
   created_at DateTime @default(now())
@@ -46,12 +46,12 @@ model Word {
 
 model Counter {
   id Int @id @default(autoincrement())
-  
+
   user_id Int
-  user User @relation(fields: [user_id], references: [id])
+  user    User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   word_id Int
-  word Word @relation(fields: [word_id], references: [id])
+  word    Word @relation(fields: [word_id], references: [id], onDelete: Cascade)
 
   countdown Int @default(40)
 

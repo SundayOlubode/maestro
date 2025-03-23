@@ -5,18 +5,16 @@ import { DatabaseService } from 'src/database/database.service';
 import { OpenaiService } from 'src/openai/openai.service';
 import * as fs from 'fs';
 import {
-  ASST_ID,
-  DEV_ASST_ID,
-  DEV_THREAD_ID,
   EnglishWords,
   NODE_ENV,
   NUMWORDUSAGES,
-  THREAD_ID,
+  SYSTEM_CONTENT,
 } from 'src/constants';
 import { Counter, Word } from '@prisma/client';
 import { User } from 'src/user/entities/user.entity';
 import { EmailService } from 'src/email/email.service';
 import { AllWords } from 'src/common';
+const modelName = 'gpt-4o-mini';
 
 @Injectable()
 export class WordService {
@@ -45,15 +43,15 @@ export class WordService {
 
     if (wordExists) {
       await this.updateWordUsersAndCounter(wordExists, user);
-      return this.WordCreateResponse(word);
+      return this.wordCreateResponse(word);
     }
 
     await this.generateWordMeaningAndUsages(word, user);
 
-    return this.WordCreateResponse(word);
+    return this.wordCreateResponse(word);
   }
 
-  private WordCreateResponse(word: string | Word) {
+  private wordCreateResponse(word: string | Word) {
     return {
       status: 'success',
       message: 'Word created successfully',
@@ -63,30 +61,34 @@ export class WordService {
     };
   }
 
+  async createWordUsagesFromGPT(word: string) {
+    const response = await this.openai.chat.completions.create({
+      messages: [
+        {
+          role: 'system',
+          content: SYSTEM_CONTENT,
+        },
+        { role: 'user', content: word },
+      ],
+      temperature: 1.0,
+      top_p: 1.0,
+      max_tokens: 1000,
+      model: modelName,
+    });
+
+    return response.choices[0].message.content;
+  }
+
   private async generateWordMeaningAndUsages(
     wordText: string,
     user: User,
   ) {
-    const threadId =
-      NODE_ENV === 'development' ? DEV_THREAD_ID : THREAD_ID;
-
-    await this.openai.beta.threads.messages.create(threadId, {
-      role: 'user',
-      content: wordText,
-    });
-    await this.openai.beta.threads.runs.create(threadId, {
-      assistant_id:
-        NODE_ENV === 'development' ? DEV_ASST_ID : ASST_ID,
-    });
-
     const intervalId = setInterval(async () => {
-      const response =
-        await this.openai.beta.threads.messages.list(threadId);
-      const lastMessage = response.data[0];
-      const result = lastMessage.content[0]['text']['value'];
+      const response = await this.createWordUsagesFromGPT(wordText);
 
-      if (result) {
-        await this.createWordFromAIResult(result, wordText, user);
+      if (response) {
+        await this.createWordFromAIResult(response, wordText, user);
+        console.log('Word created successfully', response[100]);
         clearInterval(intervalId);
       }
     }, 20000);
@@ -95,19 +97,22 @@ export class WordService {
   }
 
   private async createWordFromAIResult(result, wordText, user) {
-    fs.appendFileSync('word-meaning-and-usages.txt', result + '\n');
+    const parts = result.split('**');
+    const meaning = parts.length >= 3 ? parts[2].trim() : '';
 
-    const meaningRegex = /Meaning:(.*?)(?=Sentences:)/s;
-    const usageRegex = /Sentences:(.*)/s;
-    const sentenceRegex = /\d+\. "(.*?)"/g;
-
-    const meaning: string = result.match(meaningRegex)[1].trim();
-    const usageMatch = result.match(usageRegex)[1].trim();
     const usages = [];
+    const usageRegex = /\d+\.?\s+(.*?)(?:\.|$)/gm;
     let match;
-    while ((match = sentenceRegex.exec(usageMatch)) !== null) {
-      usages.push(match[1].trim());
+
+    while ((match = usageRegex.exec(result)) !== null) {
+      const usage = match[1].trim();
+      if (usage) {
+        usages.push(usage);
+      }
     }
+
+    // Save to file
+    fs.appendFileSync('word-meaning-and-usages.txt', result + '\n\n');
 
     // CREATE WORD
     await this.db.word.create({
@@ -123,7 +128,7 @@ export class WordService {
         counters: {
           create: {
             user_id: user.id,
-            countdown: NODE_ENV === 'development' ? 10 : undefined,
+            countdown: NODE_ENV === 'development' ? 10 : 40,
           },
         },
       },
@@ -160,10 +165,13 @@ export class WordService {
   async sendWordUsagesToUsers() {
     const users = await this.findUsersFromCounters();
 
+    console.log('USERS', users);
+
     const totalCounters: Counter[] = [];
     let allWords: AllWords = {};
 
     await this.selectWordUsers(users, totalCounters, allWords);
+    console.log('ALL WORDS', allWords);
     await this.emailService.sendWordUsagesToUsers(allWords);
     await this.decrementCounters(totalCounters);
 

@@ -16,6 +16,7 @@ const openai_service_1 = require("../openai/openai.service");
 const fs = require("fs");
 const constants_1 = require("../constants");
 const email_service_1 = require("../email/email.service");
+const modelName = 'gpt-4o-mini';
 let WordService = class WordService {
     constructor(db, openai, emailService) {
         this.db = db;
@@ -34,12 +35,12 @@ let WordService = class WordService {
         });
         if (wordExists) {
             await this.updateWordUsersAndCounter(wordExists, user);
-            return this.WordCreateResponse(word);
+            return this.wordCreateResponse(word);
         }
         await this.generateWordMeaningAndUsages(word, user);
-        return this.WordCreateResponse(word);
+        return this.wordCreateResponse(word);
     }
-    WordCreateResponse(word) {
+    wordCreateResponse(word) {
         return {
             status: 'success',
             message: 'Word created successfully',
@@ -48,38 +49,46 @@ let WordService = class WordService {
             },
         };
     }
+    async createWordUsagesFromGPT(word) {
+        const response = await this.openai.chat.completions.create({
+            messages: [
+                {
+                    role: 'system',
+                    content: constants_1.SYSTEM_CONTENT,
+                },
+                { role: 'user', content: word },
+            ],
+            temperature: 1.0,
+            top_p: 1.0,
+            max_tokens: 1000,
+            model: modelName,
+        });
+        return response.choices[0].message.content;
+    }
     async generateWordMeaningAndUsages(wordText, user) {
-        const threadId = constants_1.NODE_ENV === 'development' ? constants_1.DEV_THREAD_ID : constants_1.THREAD_ID;
-        await this.openai.beta.threads.messages.create(threadId, {
-            role: 'user',
-            content: wordText,
-        });
-        await this.openai.beta.threads.runs.create(threadId, {
-            assistant_id: constants_1.NODE_ENV === 'development' ? constants_1.DEV_ASST_ID : constants_1.ASST_ID,
-        });
         const intervalId = setInterval(async () => {
-            const response = await this.openai.beta.threads.messages.list(threadId);
-            const lastMessage = response.data[0];
-            const result = lastMessage.content[0]['text']['value'];
-            if (result) {
-                await this.createWordFromAIResult(result, wordText, user);
+            const response = await this.createWordUsagesFromGPT(wordText);
+            if (response) {
+                await this.createWordFromAIResult(response, wordText, user);
+                console.log('Word created successfully', response[100]);
                 clearInterval(intervalId);
             }
         }, 20000);
         return;
     }
     async createWordFromAIResult(result, wordText, user) {
-        fs.appendFileSync('word-meaning-and-usages.txt', result + '\n');
-        const meaningRegex = /Meaning:(.*?)(?=Sentences:)/s;
-        const usageRegex = /Sentences:(.*)/s;
-        const sentenceRegex = /\d+\. "(.*?)"/g;
-        const meaning = result.match(meaningRegex)[1].trim();
-        const usageMatch = result.match(usageRegex)[1].trim();
+        const parts = result.split('**');
+        const meaning = parts.length >= 3 ? parts[2].trim() : '';
         const usages = [];
+        const usageRegex = /\d+\.?\s+(.*?)(?:\.|$)/gm;
         let match;
-        while ((match = sentenceRegex.exec(usageMatch)) !== null) {
-            usages.push(match[1].trim());
+        while ((match = usageRegex.exec(result)) !== null) {
+            const usage = match[1].trim();
+            if (usage) {
+                usages.push(usage);
+            }
         }
+        fs.appendFileSync('word-meaning-and-usages.txt', result + '\n\n');
         await this.db.word.create({
             data: {
                 word: wordText,
@@ -93,7 +102,7 @@ let WordService = class WordService {
                 counters: {
                     create: {
                         user_id: user.id,
-                        countdown: constants_1.NODE_ENV === 'development' ? 10 : undefined,
+                        countdown: constants_1.NODE_ENV === 'development' ? 10 : 40,
                     },
                 },
             },
@@ -123,9 +132,11 @@ let WordService = class WordService {
     }
     async sendWordUsagesToUsers() {
         const users = await this.findUsersFromCounters();
+        console.log('USERS', users);
         const totalCounters = [];
         let allWords = {};
         await this.selectWordUsers(users, totalCounters, allWords);
+        console.log('ALL WORDS', allWords);
         await this.emailService.sendWordUsagesToUsers(allWords);
         await this.decrementCounters(totalCounters);
         return {

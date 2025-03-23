@@ -7,20 +7,136 @@
       content="width=device-width, initial-scale=1.0"
     />
     <title>Word Usage Email</title>
+    <style>
+      /* Base styles */
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background-color: #f9f9f9;
+        margin: 0;
+        padding: 0;
+      }
+
+      .container {
+        max-width: 600px;
+        margin: 20px auto;
+        padding: 20px;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .header {
+        text-align: center;
+        padding-bottom: 15px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #eaeaea;
+      }
+
+      .header h1 {
+        color: #4a6ee0;
+        margin: 0;
+        font-size: 24px;
+      }
+
+      .word-card {
+        margin-bottom: 30px;
+        padding: 20px;
+        background-color: #f8f9ff;
+        border-radius: 6px;
+        border-left: 4px solid #4a6ee0;
+      }
+
+      .word-card:last-child {
+        margin-bottom: 0;
+      }
+
+      .word-title {
+        color: #4a6ee0;
+        margin-top: 0;
+        font-size: 22px;
+        font-weight: 600;
+      }
+
+      .meaning {
+        margin-bottom: 15px;
+        line-height: 1.6;
+        color: #555;
+        font-size: 16px;
+      }
+
+      .meaning strong {
+        color: #333;
+      }
+
+      ul.usage-list {
+        padding-left: 20px;
+        margin: 15px 0;
+      }
+
+      ul.usage-list li {
+        margin-bottom: 10px;
+        color: #555;
+        font-size: 15px;
+      }
+
+      .footer {
+        text-align: center;
+        margin-top: 30px;
+        padding-top: 15px;
+        font-size: 14px;
+        color: #888;
+        border-top: 1px solid #eaeaea;
+      }
+
+      /* Responsive adjustments */
+      @media screen and (max-width: 480px) {
+        .container {
+          padding: 15px;
+        }
+
+        .word-card {
+          padding: 15px;
+        }
+
+        .word-title {
+          font-size: 20px;
+        }
+      }
+    </style>
   </head>
   <body>
-    <div>
+    <div class="container">
+      <div class="header">
+        <h1>Your Daily Vocabulary Builder</h1>
+      </div>
+
       <% words.forEach(wordData => { %>
-      <div>
-        <h2><%= wordData.word.word %></h2>
-        <p><strong>Meaning:</strong> <%= wordData.word.meaning %></p>
-        <ul>
+      <div class="word-card">
+        <h2 class="word-title"><%= wordData.word.word %></h2>
+        <p class="meaning">
+          <strong>Meaning:</strong> <%= wordData.word.meaning %>
+        </p>
+        <% if (wordData.word.usages && wordData.word.usages.length >
+        0) { %>
+        <ul class="usage-list">
           <% wordData.word.usages.forEach(usage => { %>
           <li><%= usage %></li>
           <% }); %>
         </ul>
+        <% } else { %>
+        <p>No example usages available for this word.</p>
+        <% } %>
       </div>
       <% }); %>
+
+      <div class="footer">
+        <p>
+          Expand your vocabulary with daily word updates. Happy
+          learning!
+        </p>
+      </div>
     </div>
   </body>
 </html>
