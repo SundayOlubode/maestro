@@ -15,6 +15,11 @@ import * as checkWord from 'check-if-word';
 export const EnglishWords = checkWord('en');
 export const NUMWORDUSAGES = NODE_ENV === 'production' ? 8 : 5;
 export const NUM_WORD_TO_GEN = NODE_ENV === 'production' ? 40 : 10;
+
 export const SYSTEM_CONTENT = `With a given word, you are to generate the meaning of that word, along with ${
   NODE_ENV === 'production' ? 'forty' : 'ten'
-} numbered usages of that word in a sentence.`;
+} numbered usages of that word in sentences.`;
+
+export const IDIOM_SYSTEM_CONTENT = `You are a vocabulary assistant that helps users understand idioms. With a given idiom, you are to generate the meaning of that idiom, along with ${
+  NODE_ENV === 'production' ? 'forty' : 'ten'
+} numbered usages of that idiom in sentences.`;

@@ -25,8 +25,9 @@ let WordService = class WordService {
     }
     async create(dto, user) {
         let word = dto.word.toLowerCase();
-        if (!constants_1.EnglishWords.check(word)) {
-            throw new common_1.BadRequestException(`${dto.word} is not a valid English word`);
+        const isValidIdiom = await this.validateWord(word);
+        if (!isValidIdiom) {
+            throw new common_1.BadRequestException(`"${dto.word}" does not appear to be a recognized English word`);
         }
         const wordExists = await this.db.word.findFirst({
             where: {
@@ -46,6 +47,134 @@ let WordService = class WordService {
         }
         await this.generateWordMeaningAndUsages(word, user);
         return this.wordCreateResponse(word);
+    }
+    async createIdiom(dto, user) {
+        let idiom = dto.idiom.toLowerCase().trim();
+        const idiomExists = await this.db.word.findFirst({
+            where: {
+                word: idiom,
+                isIdiom: true,
+            },
+            include: {
+                users: {
+                    select: {
+                        id: true,
+                    },
+                },
+            },
+        });
+        if (idiomExists) {
+            await this.updateWordUsersAndCounter(idiomExists, user);
+            return this.idiomCreateResponse(idiom);
+        }
+        const isValidIdiom = await this.validateIdiom(idiom);
+        if (!isValidIdiom) {
+            throw new common_1.BadRequestException(`"${dto.idiom}" does not appear to be a recognized English idiom`);
+        }
+        await this.generateIdiomMeaningAndUsages(idiom, user);
+        return this.idiomCreateResponse(idiom);
+    }
+    async validateIdiom(phrase) {
+        try {
+            const response = await this.openai.chat.completions.create({
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'You are a helpful assistant that determines whether a phrase is a recognized English idiom or not. Respond only with "YES" if it is an idiom, or "NO" if it is not.',
+                    },
+                    {
+                        role: 'user',
+                        content: `Is "${phrase}" a recognized English idiom or common phrase?`,
+                    },
+                ],
+                temperature: 0.2,
+                max_tokens: 10,
+                model: modelName,
+            });
+            const result = response.choices[0].message.content
+                .trim()
+                .toUpperCase();
+            return result.includes('YES');
+        }
+        catch (error) {
+            console.error(`Error validating idiom: ${error.message}`);
+            return false;
+        }
+    }
+    async validateWord(phrase) {
+        try {
+            const response = await this.openai.chat.completions.create({
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'You are a helpful assistant that determines whether a word is a recognized English word or not. Respond only with "YES" if it is a word, or "NO" if it is not.',
+                    },
+                    {
+                        role: 'user',
+                        content: `Is "${phrase}" a recognized English word?`,
+                    },
+                ],
+                temperature: 0.2,
+                max_tokens: 10,
+                model: modelName,
+            });
+            const result = response.choices[0].message.content
+                .trim()
+                .toUpperCase();
+            return result.includes('YES');
+        }
+        catch (error) {
+            console.error(`Error validating word: ${error.message}`);
+            return false;
+        }
+    }
+    async getAllIdioms(page = 1, limit = 20) {
+        const skip = (page - 1) * limit;
+        const idioms = await this.db.word.findMany({
+            where: {
+                isIdiom: true,
+            },
+            skip,
+            take: limit,
+            orderBy: {
+                created_at: 'desc',
+            },
+        });
+        const total = await this.db.word.count({
+            where: {
+                isIdiom: true,
+            },
+        });
+        return {
+            idioms,
+            pagination: {
+                total,
+                page,
+                limit,
+                pages: Math.ceil(total / limit),
+            },
+        };
+    }
+    async getIdiomByText(idiomText) {
+        const idiom = await this.db.word.findFirst({
+            where: {
+                word: idiomText.toLowerCase().trim(),
+                isIdiom: true,
+            },
+        });
+        if (!idiom) {
+            throw new common_1.BadRequestException(`Idiom "${idiomText}" not found`);
+        }
+        return idiom;
+    }
+    idiomCreateResponse(idiom) {
+        return {
+            status: 'success',
+            message: 'Idiom created successfully',
+            data: {
+                idiom,
+            },
+        };
     }
     wordCreateResponse(word) {
         return {
@@ -72,20 +201,48 @@ let WordService = class WordService {
         });
         return response.choices[0].message.content;
     }
+    async createIdiomUsagesFromGPT(idiom) {
+        const response = await this.openai.chat.completions.create({
+            messages: [
+                {
+                    role: 'system',
+                    content: constants_1.IDIOM_SYSTEM_CONTENT,
+                },
+                { role: 'user', content: idiom },
+            ],
+            temperature: 1.0,
+            top_p: 1.0,
+            max_tokens: 1000,
+            model: modelName,
+        });
+        return response.choices[0].message.content;
+    }
     async generateWordMeaningAndUsages(wordText, user) {
         const intervalId = setInterval(async () => {
             const response = await this.createWordUsagesFromGPT(wordText);
             if (response) {
-                await this.createWordFromAIResult(response, wordText, user);
+                await this.createWordFromAIResult(response, wordText, user, false);
                 console.log('Word created successfully');
                 clearInterval(intervalId);
             }
         }, 2000);
         return;
     }
-    async createWordFromAIResult(result, wordText, user) {
-        const parts = result.split('**');
-        const meaning = parts.length >= 3 ? parts[2].trim() : '';
+    async generateIdiomMeaningAndUsages(idiomText, user) {
+        const intervalId = setInterval(async () => {
+            const response = await this.createIdiomUsagesFromGPT(idiomText);
+            if (response) {
+                await this.createWordFromAIResult(response, idiomText, user, true);
+                console.log('Idiom created successfully');
+                clearInterval(intervalId);
+            }
+        }, 2000);
+        return;
+    }
+    async createWordFromAIResult(result, wordText, user, isIdiom = false) {
+        const meaningRegex = /\*\*Meaning(?:.*?):\*\*(.*?)(?=\*\*|$)/s;
+        const meaningMatch = result.match(meaningRegex);
+        const meaning = meaningMatch ? meaningMatch[1].trim() : '';
         const usages = [];
         const usageRegex = /\d+\.?\s+(.*?)(?:\.|$)/gm;
         let match;
@@ -95,12 +252,15 @@ let WordService = class WordService {
                 usages.push(usage);
             }
         }
-        fs.appendFileSync('word-meaning-and-usages.txt', result + '\n\n');
+        fs.appendFileSync(isIdiom
+            ? 'idiom-meaning-and-usages.txt'
+            : 'word-meaning-and-usages.txt', result + '\n\n');
         await this.db.word.create({
             data: {
                 word: wordText,
                 meaning,
                 usages,
+                isIdiom,
                 users: {
                     connect: {
                         id: user.id,

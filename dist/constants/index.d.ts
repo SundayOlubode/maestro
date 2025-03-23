@@ -14,3 +14,4 @@ export declare const EnglishWords: any;
 export declare const NUMWORDUSAGES: number;
 export declare const NUM_WORD_TO_GEN: number;
 export declare const SYSTEM_CONTENT: string;
+export declare const IDIOM_SYSTEM_CONTENT: string;

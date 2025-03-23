@@ -1,4 +1,4 @@
-import { CreateWordDto } from './dto/create-word.dto';
+import { CreateIdiomDto, CreateWordDto } from './dto/create-word.dto';
 import { UpdateWordDto } from './dto/update-word.dto';
 import { DatabaseService } from 'src/database/database.service';
 import { OpenaiService } from 'src/openai/openai.service';
@@ -18,14 +18,61 @@ export declare class WordService {
                 word: string;
                 meaning: string;
                 usages: string[];
+                isIdiom: boolean;
                 created_at: Date;
                 updated_at: Date;
             };
         };
     }>;
+    createIdiom(dto: CreateIdiomDto, user: User): Promise<{
+        status: string;
+        message: string;
+        data: {
+            idiom: string | {
+                id: number;
+                word: string;
+                meaning: string;
+                usages: string[];
+                isIdiom: boolean;
+                created_at: Date;
+                updated_at: Date;
+            };
+        };
+    }>;
+    validateIdiom(phrase: string): Promise<boolean>;
+    validateWord(phrase: string): Promise<boolean>;
+    getAllIdioms(page?: number, limit?: number): Promise<{
+        idioms: {
+            id: number;
+            word: string;
+            meaning: string;
+            usages: string[];
+            isIdiom: boolean;
+            created_at: Date;
+            updated_at: Date;
+        }[];
+        pagination: {
+            total: number;
+            page: number;
+            limit: number;
+            pages: number;
+        };
+    }>;
+    getIdiomByText(idiomText: string): Promise<{
+        id: number;
+        word: string;
+        meaning: string;
+        usages: string[];
+        isIdiom: boolean;
+        created_at: Date;
+        updated_at: Date;
+    }>;
+    private idiomCreateResponse;
     private wordCreateResponse;
     createWordUsagesFromGPT(word: string): Promise<string>;
+    createIdiomUsagesFromGPT(idiom: string): Promise<string>;
     private generateWordMeaningAndUsages;
+    private generateIdiomMeaningAndUsages;
     private createWordFromAIResult;
     private updateWordUsersAndCounter;
     sendWordUsagesToUsers(): Promise<{

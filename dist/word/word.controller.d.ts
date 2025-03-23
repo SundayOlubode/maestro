@@ -1,6 +1,7 @@
 import { WordService } from './word.service';
-import { CreateWordDto } from './dto/create-word.dto';
+import { CreateIdiomDto, CreateWordDto } from './dto/create-word.dto';
 import { UpdateWordDto } from './dto/update-word.dto';
+import { User } from '@prisma/client';
 export declare class WordController {
     private readonly wordService;
     constructor(wordService: WordService);
@@ -13,6 +14,22 @@ export declare class WordController {
                 word: string;
                 meaning: string;
                 usages: string[];
+                isIdiom: boolean;
+                created_at: Date;
+                updated_at: Date;
+            };
+        };
+    }>;
+    createIdiom(createIdiomDto: CreateIdiomDto, user: User): Promise<{
+        status: string;
+        message: string;
+        data: {
+            idiom: string | {
+                id: number;
+                word: string;
+                meaning: string;
+                usages: string[];
+                isIdiom: boolean;
                 created_at: Date;
                 updated_at: Date;
             };

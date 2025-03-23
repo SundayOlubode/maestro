@@ -25,6 +25,9 @@ let WordController = class WordController {
     create(createWordDto, user) {
         return this.wordService.create(createWordDto, user);
     }
+    async createIdiom(createIdiomDto, user) {
+        return this.wordService.createIdiom(createIdiomDto, user);
+    }
     createWordUsage(word) {
         return this.wordService.createWordUsagesFromGPT(word);
     }
@@ -53,6 +56,14 @@ __decorate([
     __metadata("design:paramtypes", [create_word_dto_1.CreateWordDto, Object]),
     __metadata("design:returntype", void 0)
 ], WordController.prototype, "create", null);
+__decorate([
+    (0, common_1.Post)('idiom'),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, decorator_1.GetUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [create_word_dto_1.CreateIdiomDto, Object]),
+    __metadata("design:returntype", Promise)
+], WordController.prototype, "createIdiom", null);
 __decorate([
     (0, common_1.Post)('usage'),
     __param(0, (0, common_1.Body)('word')),
