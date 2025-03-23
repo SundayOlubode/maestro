@@ -136,7 +136,7 @@ export class AuthService {
    * @returns { token: string }
    */
   private async signToken(
-    userId: number,
+    userId: string,
     email: string,
   ): Promise<string> {
     const payload = {

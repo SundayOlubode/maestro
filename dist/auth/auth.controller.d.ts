@@ -10,7 +10,7 @@ export declare class AuthController {
         message: string;
         data: {
             user: {
-                id: number;
+                id: string;
                 firstname: string;
                 lastname: string;
                 email: string;
@@ -27,7 +27,7 @@ export declare class AuthController {
         message: string;
         data: {
             user: {
-                id: number;
+                id: string;
                 firstname: string;
                 lastname: string;
                 email: string;

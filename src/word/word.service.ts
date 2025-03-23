@@ -281,6 +281,7 @@ export class WordService {
       const response = await this.createWordUsagesFromGPT(wordText);
 
       if (response) {
+        clearInterval(intervalId);
         await this.createWordFromAIResult(
           response,
           wordText,
@@ -288,9 +289,8 @@ export class WordService {
           false,
         );
         console.log('Word created successfully');
-        clearInterval(intervalId);
       }
-    }, 2000);
+    }, 5000);
 
     return;
   }
@@ -306,6 +306,7 @@ export class WordService {
       const response = await this.createIdiomUsagesFromGPT(idiomText);
 
       if (response) {
+        clearInterval(intervalId);
         await this.createWordFromAIResult(
           response,
           idiomText,
@@ -313,9 +314,8 @@ export class WordService {
           true,
         );
         console.log('Idiom created successfully');
-        clearInterval(intervalId);
       }
-    }, 2000);
+    }, 5000);
 
     return;
   }
@@ -326,50 +326,57 @@ export class WordService {
     user,
     isIdiom = false,
   ) {
-    const meaningRegex = /\*\*Meaning(?:.*?):\*\*(.*?)(?=\*\*|$)/s;
-    const meaningMatch = result.match(meaningRegex);
-    const meaning = meaningMatch ? meaningMatch[1].trim() : '';
+    try {
+      const meaningRegex = /\*\*Meaning(?:.*?):\*\*(.*?)(?=\*\*|$)/s;
+      const meaningMatch = result.match(meaningRegex);
+      const meaning = meaningMatch ? meaningMatch[1].trim() : '';
 
-    const usages = [];
-    const usageRegex = /\d+\.?\s+(.*?)(?:\.|$)/gm;
-    let match;
+      const usages = [];
+      const usageRegex = /\d+\.?\s+(.*?)(?:\.|$)/gm;
+      let match;
 
-    while ((match = usageRegex.exec(result)) !== null) {
-      const usage = match[1].trim();
-      if (usage) {
-        usages.push(usage);
+      while ((match = usageRegex.exec(result)) !== null) {
+        const usage = match[1].trim();
+        if (usage) {
+          usages.push(usage);
+        }
       }
+
+      // Save to file
+      fs.appendFileSync(
+        isIdiom
+          ? 'idiom-meaning-and-usages.txt'
+          : 'word-meaning-and-usages.txt',
+        result + '\n\n',
+      );
+
+      // CREATE WORD/IDIOM
+      await this.db.word.create({
+        data: {
+          word: wordText,
+          meaning,
+          usages,
+          isIdiom, // Mark as idiom if applicable
+          users: {
+            connect: {
+              id: user.id,
+            },
+          },
+          counters: {
+            create: {
+              user_id: user.id,
+              countdown: NUM_WORD_TO_GEN,
+            },
+          },
+        },
+      });
+      return;
+    } catch (error) {
+      console.error(`Error creating word: ${error.message}`);
+      throw new BadRequestException(
+        `Error creating word: ${error.message}`,
+      );
     }
-
-    // Save to file
-    fs.appendFileSync(
-      isIdiom
-        ? 'idiom-meaning-and-usages.txt'
-        : 'word-meaning-and-usages.txt',
-      result + '\n\n',
-    );
-
-    // CREATE WORD/IDIOM
-    await this.db.word.create({
-      data: {
-        word: wordText,
-        meaning,
-        usages,
-        isIdiom, // Mark as idiom if applicable
-        users: {
-          connect: {
-            id: user.id,
-          },
-        },
-        counters: {
-          create: {
-            user_id: user.id,
-            countdown: NUM_WORD_TO_GEN,
-          },
-        },
-      },
-    });
-    return;
   }
 
   private async updateWordUsersAndCounter(word: Word, user: User) {

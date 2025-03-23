@@ -10,7 +10,7 @@ export declare class WordController {
         message: string;
         data: {
             word: string | {
-                id: number;
+                id: string;
                 word: string;
                 meaning: string;
                 usages: string[];
@@ -25,7 +25,7 @@ export declare class WordController {
         message: string;
         data: {
             idiom: string | {
-                id: number;
+                id: string;
                 word: string;
                 meaning: string;
                 usages: string[];

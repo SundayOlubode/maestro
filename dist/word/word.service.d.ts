@@ -14,7 +14,7 @@ export declare class WordService {
         message: string;
         data: {
             word: string | {
-                id: number;
+                id: string;
                 word: string;
                 meaning: string;
                 usages: string[];
@@ -29,7 +29,7 @@ export declare class WordService {
         message: string;
         data: {
             idiom: string | {
-                id: number;
+                id: string;
                 word: string;
                 meaning: string;
                 usages: string[];
@@ -43,7 +43,7 @@ export declare class WordService {
     validateWord(phrase: string): Promise<boolean>;
     getAllIdioms(page?: number, limit?: number): Promise<{
         idioms: {
-            id: number;
+            id: string;
             word: string;
             meaning: string;
             usages: string[];
@@ -59,7 +59,7 @@ export declare class WordService {
         };
     }>;
     getIdiomByText(idiomText: string): Promise<{
-        id: number;
+        id: string;
         word: string;
         meaning: string;
         usages: string[];
