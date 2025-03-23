@@ -22,7 +22,8 @@ export declare class WordService {
             };
         };
     }>;
-    private WordCreateResponse;
+    private wordCreateResponse;
+    createWordUsagesFromGPT(word: string): Promise<string>;
     private generateWordMeaningAndUsages;
     private createWordFromAIResult;
     private updateWordUsersAndCounter;

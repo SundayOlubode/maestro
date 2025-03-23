@@ -13,10 +13,12 @@ exports.OpenaiService = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const openai_1 = require("openai");
+const endpoint = 'https://models.inference.ai.azure.com';
 let OpenaiService = class OpenaiService extends openai_1.OpenAI {
     constructor(config) {
         super({
-            apiKey: config.get('OPENAI_API_KEY'),
+            baseURL: endpoint,
+            apiKey: config.getOrThrow('GITHUB_TOKEN'),
         });
         this.config = config;
     }

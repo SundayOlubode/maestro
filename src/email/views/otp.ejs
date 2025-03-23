@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>Your Verification Code</title>
+    <style>
+      /* Base styles */
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background-color: #f9f9f9;
+        margin: 0;
+        padding: 0;
+      }
+
+      .container {
+        max-width: 600px;
+        margin: 20px auto;
+        padding: 30px;
+        background-color: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .header {
+        text-align: center;
+        padding-bottom: 20px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #eaeaea;
+      }
+
+      .header img {
+        max-width: 120px;
+        margin-bottom: 15px;
+      }
+
+      .header h1 {
+        color: #3a4f66;
+        margin: 0;
+        font-size: 24px;
+      }
+
+      .content {
+        padding: 20px 0;
+        text-align: center;
+      }
+
+      .otp-container {
+        margin: 25px 0;
+        padding: 15px;
+        background-color: #f8f9ff;
+        border-radius: 6px;
+        text-align: center;
+        border: 1px dashed #d1d9e6;
+      }
+
+      .otp-code {
+        font-size: 32px;
+        font-weight: bold;
+        letter-spacing: 5px;
+        color: #2c3e50;
+        margin: 10px 0;
+      }
+
+      .message {
+        margin-bottom: 25px;
+        line-height: 1.7;
+        color: #555;
+        font-size: 16px;
+        text-align: left;
+      }
+
+      .footer {
+        text-align: center;
+        margin-top: 30px;
+        padding-top: 20px;
+        font-size: 14px;
+        color: #888;
+        border-top: 1px solid #eaeaea;
+      }
+
+      .footer p {
+        margin: 5px 0;
+      }
+
+      .note {
+        font-size: 13px;
+        color: #999;
+        margin-top: 20px;
+      }
+
+      /* Responsive adjustments */
+      @media screen and (max-width: 480px) {
+        .container {
+          padding: 20px;
+        }
+
+        .otp-code {
+          font-size: 28px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <!-- Uncomment and add your logo if needed -->
+        <!-- <img src="https://yourwebsite.com/logo.png" alt="Logo"> -->
+        <h1>Account Verification</h1>
+      </div>
+
+      <div class="content">
+        <div class="message">
+          <p>Hello <%= user.firstname %>,</p>
+          <p>
+            Thanks for signing up! To complete your registration,
+            please use the verification code below:
+          </p>
+        </div>
+
+        <div class="otp-container">
+          <p class="otp-code"><%= otp %></p>
+        </div>
+
+        <div class="message">
+          <p>
+            This code will expire in 10 minutes. If you didn't request
+            this code, you can safely ignore this email.
+          </p>
+        </div>
+      </div>
+
+      <div class="footer">
+        <p>
+          © <%= new Date().getFullYear() %> Maestro. All rights
+          reserved.
+        </p>
+        <p class="note">
+          This is an automated message, please do not reply to this
+          email.
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

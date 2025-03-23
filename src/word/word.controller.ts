@@ -20,6 +20,11 @@ export class WordController {
     return this.wordService.create(createWordDto, user);
   }
 
+  @Post('usage')
+  createWordUsage(@Body('word') word: string) {
+    return this.wordService.createWordUsagesFromGPT(word);
+  }
+
   @Public()
   @Get('send')
   sendWordUsagesToUsers() {

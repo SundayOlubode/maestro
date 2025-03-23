@@ -18,6 +18,7 @@ export declare class WordController {
             };
         };
     }>;
+    createWordUsage(word: string): Promise<string>;
     sendWordUsagesToUsers(): Promise<{
         status: string;
         message: string;

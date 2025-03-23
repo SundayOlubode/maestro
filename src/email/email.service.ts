@@ -1,28 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { renderFile } from 'ejs';
 
-import * as FormData from 'form-data';
-import Mailgun, {
-  MailgunClientOptions,
-  MailgunMessageData,
-} from 'mailgun.js';
 import {
-  MAESTROSENDER,
-  MAILGUN_API_KEY,
-  NODE_ENV,
   EMAIL_DOMAIN,
   NUMWORDUSAGES,
+  RESEND_API_KEY,
 } from 'src/constants';
+
 import { User } from 'src/user/entities/user.entity';
-const mailgun = new Mailgun(FormData);
 
-const mailgunClientOptions: MailgunClientOptions = {
-  username: 'api',
-  key: MAILGUN_API_KEY,
-};
-
-const mg = mailgun.client(mailgunClientOptions);
+import { Resend } from 'resend';
+const resend = new Resend(RESEND_API_KEY);
 
 @Injectable()
 export class EmailService {
@@ -30,47 +18,58 @@ export class EmailService {
   firstname: string;
   from: string;
 
-  constructor(private configService: ConfigService) {
-    this.from = MAESTROSENDER;
+  constructor() {
+    this.from = `Maestro <no-reply@${EMAIL_DOMAIN}>`;
   }
 
-  private async send(
-    template: string,
-    subject: string,
-    user: User,
-    otp: number,
-  ) {
-    const data: MailgunMessageData = {
-      from: this.from,
-      to: user.email,
-      template,
-      subject,
-      'h:X-Mailgun-Variables': JSON.stringify({
-        firstname: user.firstname,
-        otp,
-      }),
-    };
+  /**
+   * Send OTP verification email to user with styled template
+   */
+  async sendOtp(user: User, otp: number): Promise<boolean> {
+    if (!user?.email) {
+      console.log(
+        'Attempted to send OTP to user with no email address',
+      );
+      return false;
+    }
 
     try {
-      console.log(MAILGUN_API_KEY);
+      // Render the HTML template
+      const pathname = `${__dirname}/../../src/email/views/otp.ejs`;
+      const html = await renderFile(pathname, { user, otp });
 
-      await mg.messages.create(EMAIL_DOMAIN, data);
+      const data = {
+        from: this.from,
+        to: user.email,
+        subject: 'Verification Code for Your Account',
+        text: `Your verification code is: ${otp}. This code will expire in 10 minutes.`,
+        html,
+      };
+
+      const result = await resend.emails.send(data);
+
+      // Check if there's an error in the response
+      if (result.error) {
+        console.log(
+          `Failed to send OTP email to ${
+            user.email
+          }: ${JSON.stringify(result.error)}`,
+        );
+        return false;
+      }
+
+      return true;
     } catch (error) {
-      console.log(error);
+      console.log(
+        `Exception sending OTP email to ${user.email}: ${error.message}`,
+        error.stack,
+      );
+      return false;
     }
   }
 
-  async sendOtp(user: User, otp: number) {
-    await this.send(
-      'maestro-otp',
-      'OTP! Verify Your Account',
-      user,
-      otp,
-    );
-  }
-
   async sendWordUsagesToUsers(allWords: any) {
-    const subject = 'Word Usages';
+    const subject = 'Your Daily Vocabulary';
 
     for (const email in allWords) {
       let words = allWords[email];
@@ -84,7 +83,6 @@ export class EmailService {
         );
       });
 
-      //1. RENDER HTML BASED BODY
       let html;
       const pathname = `${__dirname}/../../src/email/views/wordusages.ejs`;
       renderFile(
@@ -103,8 +101,7 @@ export class EmailService {
         subject,
         html,
       };
-
-      await mg.messages.create(EMAIL_DOMAIN, mailOptions);
+      await resend.emails.send(mailOptions);
     }
   }
 }

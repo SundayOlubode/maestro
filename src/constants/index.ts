@@ -9,6 +9,8 @@ export const MAILGUN_API_KEY = process.env.MAILGUN_API_KEY;
 export const EMAIL_DOMAIN = process.env.EMAIL_DOMAIN;
 export const NODE_ENV = process.env.NODE_ENV;
 export const MAESTROSENDER = process.env.MAESTROSENDER;
+export const RESEND_API_KEY = process.env.RESEND_API_KEY;
+export const SYSTEM_CONTENT = process.env.SYSTEM_CONTENT;
 
 import * as checkWord from 'check-if-word';
 export const EnglishWords = checkWord('en');
