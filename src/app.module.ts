@@ -16,9 +16,11 @@ import { ExceptionModule } from './exception/exception.module';
 import * as redisStore from 'cache-manager-redis-store';
 import { ExceptionService } from './exception/exception.service';
 import { OpenaiModule } from './openai/openai.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       cache: true,
