@@ -516,22 +516,6 @@ export class WordService {
   }
 
   private async updateWordUsersAndCounter(word: Word, user: User) {
-    //@ts-ignore
-    if (word.users.find((u) => u.id === user.id)) {
-      // IF WORD EXISTS AND USER ALREADY CREATED IT, RESET WORD COUNTER FOR USER
-      await this.db.counter.updateMany({
-        where: {
-          user_id: user.id,
-          word_id: word.id,
-        },
-        data: {
-          countdown: NUM_WORD_TO_GEN,
-        },
-      });
-
-      return;
-    }
-
     // UPDATE WORD USERS
     await this.db.word.update({
       where: {
