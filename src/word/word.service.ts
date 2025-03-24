@@ -271,51 +271,189 @@ export class WordService {
     return response.choices[0].message.content;
   }
 
+  /**
+   * Generate word meaning and usages in the background
+   */
   private async generateWordMeaningAndUsages(
     wordText: string,
     user: User,
-  ) {
-    const intervalId = setInterval(async () => {
-      const response = await this.createWordUsagesFromGPT(wordText);
-
-      if (response) {
-        clearInterval(intervalId);
-        await this.createWordFromAIResult(
-          response,
-          wordText,
-          user,
-          false,
-        );
-        console.log('Word created successfully');
-      }
-    }, 5000);
+  ): Promise<void> {
+    // Start a background process and return immediately
+    this.handleWordGeneration(wordText, user).catch((err) =>
+      console.error(`Error generating word "${wordText}":`, err),
+    );
 
     return;
   }
 
   /**
-   * Generate idiom meaning and usages
+   * Handle the actual word generation process
+   * This runs in the background and handles all the steps
+   */
+  private async handleWordGeneration(
+    wordText: string,
+    user: User,
+  ): Promise<void> {
+    try {
+      // First check if the word already exists to avoid duplicate work
+      const existingWord = await this.db.word.findUnique({
+        where: { word: wordText },
+        include: { users: true },
+      });
+
+      if (existingWord) {
+        await this.updateWordUsersAndCounter(existingWord, user);
+        console.log(
+          `Word "${wordText}" already exists, updated users and counter`,
+        );
+        return;
+      }
+
+      // Only make the API call if the word doesn't exist
+      let attempts = 0;
+      const maxAttempts = 3;
+      let response = null;
+
+      // Try up to maxAttempts times with exponential backoff
+      while (attempts < maxAttempts && !response) {
+        try {
+          response = await this.createWordUsagesFromGPT(wordText);
+        } catch (error) {
+          attempts++;
+          console.log(
+            `Attempt ${attempts} failed for word "${wordText}". Retrying...`,
+          );
+
+          if (attempts >= maxAttempts) {
+            throw new Error(
+              `Failed to generate content for word "${wordText}" after ${maxAttempts} attempts`,
+            );
+          }
+
+          // Exponential backoff: 2s, 4s, 8s, etc.
+          await new Promise((resolve) =>
+            setTimeout(resolve, 2000 * Math.pow(2, attempts - 1)),
+          );
+        }
+      }
+
+      if (response) {
+        // Check again before creating to handle race conditions
+        const wordCheck = await this.db.word.findUnique({
+          where: { word: wordText },
+        });
+
+        if (!wordCheck) {
+          await this.createWordFromAIResult(
+            response,
+            wordText,
+            user,
+            false,
+          );
+          console.log(`Word "${wordText}" created successfully`);
+        } else {
+          await this.updateWordUsersAndCounter(wordCheck, user);
+          console.log(
+            `Word "${wordText}" was created by another process, updated users and counter`,
+          );
+        }
+      }
+    } catch (error) {
+      console.error(`Error processing word "${wordText}":`, error);
+    }
+  }
+
+  /**
+   * Generate idiom meaning and usages in the background
    */
   private async generateIdiomMeaningAndUsages(
     idiomText: string,
     user: User,
-  ) {
-    const intervalId = setInterval(async () => {
-      const response = await this.createIdiomUsagesFromGPT(idiomText);
-
-      if (response) {
-        clearInterval(intervalId);
-        await this.createWordFromAIResult(
-          response,
-          idiomText,
-          user,
-          true,
-        );
-        console.log('Idiom created successfully');
-      }
-    }, 5000);
+  ): Promise<void> {
+    // Start a background process and return immediately
+    this.handleIdiomGeneration(idiomText, user).catch((err) =>
+      console.error(`Error generating idiom "${idiomText}":`, err),
+    );
 
     return;
+  }
+
+  /**
+   * Handle the actual idiom generation process
+   * This runs in the background and handles all the steps
+   */
+  private async handleIdiomGeneration(
+    idiomText: string,
+    user: User,
+  ): Promise<void> {
+    try {
+      // First check if the idiom already exists to avoid duplicate work
+      const existingIdiom = await this.db.word.findUnique({
+        where: { word: idiomText },
+        include: { users: true },
+      });
+
+      if (existingIdiom) {
+        await this.updateWordUsersAndCounter(existingIdiom, user);
+        console.log(
+          `Idiom "${idiomText}" already exists, updated users and counter`,
+        );
+        return;
+      }
+
+      // Only make the API call if the idiom doesn't exist
+      let attempts = 0;
+      const maxAttempts = 3;
+      let response = null;
+
+      // Try up to maxAttempts times with exponential backoff
+      while (attempts < maxAttempts && !response) {
+        try {
+          response = await this.createIdiomUsagesFromGPT(idiomText);
+        } catch (error) {
+          attempts++;
+          console.log(
+            `Attempt ${attempts} failed for idiom "${idiomText}". Retrying...`,
+          );
+
+          if (attempts >= maxAttempts) {
+            throw new Error(
+              `Failed to generate content for idiom "${idiomText}" after ${maxAttempts} attempts`,
+            );
+          }
+
+          // Exponential backoff: 2s, 4s, 8s, etc.
+          await new Promise((resolve) =>
+            setTimeout(resolve, 2000 * Math.pow(2, attempts - 1)),
+          );
+        }
+      }
+
+      if (response) {
+        // Check again before creating to handle race conditions
+        const idiomCheck = await this.db.word.findUnique({
+          where: { word: idiomText },
+        });
+
+        if (!idiomCheck) {
+          await this.createWordFromAIResult(
+            response,
+            idiomText,
+            user,
+            true,
+          );
+          console.log(`Idiom "${idiomText}" created successfully`);
+        } else {
+          await this.updateWordUsersAndCounter(idiomCheck, user);
+          console.log(
+            `Idiom "${idiomText}" was created by another process, updated users and counter`,
+          );
+        }
+      }
+    } catch (error) {
+      console.error(`Error processing idiom "${idiomText}":`, error);
+      // Optionally, you could log this to a database or monitoring system
+    }
   }
 
   private async createWordFromAIResult(
@@ -441,7 +579,7 @@ export class WordService {
 
   private async findUsersFromCounters() {
     // SELECT UNIQUE USER_ID ON COUNTER WHERE COUNTDOWN > 0
-    const users = await this.db.counter.findMany({
+    return await this.db.counter.findMany({
       distinct: ['user_id'],
       select: {
         user_id: true,
@@ -453,7 +591,6 @@ export class WordService {
         },
       },
     });
-    return users;
   }
 
   private async selectWordUsers(users, totalCounters, allWords) {
@@ -462,6 +599,9 @@ export class WordService {
       const counters = await this.db.counter.findMany({
         where: {
           user_id: user.user_id,
+          countdown: {
+            gt: 0,
+          },
         },
         select: {
           id: true,
