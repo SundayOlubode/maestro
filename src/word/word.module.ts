@@ -8,5 +8,6 @@ import { EmailModule } from 'src/email/email.module';
   controllers: [WordController],
   providers: [WordService, OpenaiService],
   imports: [EmailModule],
+  exports: [WordService]
 })
 export class WordModule {}
