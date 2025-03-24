@@ -20,6 +20,7 @@ exports.WordModule = WordModule = __decorate([
         controllers: [word_controller_1.WordController],
         providers: [word_service_1.WordService, openai_service_1.OpenaiService],
         imports: [email_module_1.EmailModule],
+        exports: [word_service_1.WordService]
     })
 ], WordModule);
 //# sourceMappingURL=word.module.js.map

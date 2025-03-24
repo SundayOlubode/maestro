@@ -8,9 +8,10 @@ import {
   Delete,
 } from '@nestjs/common';
 import { WordService } from './word.service';
-import { CreateWordDto } from './dto/create-word.dto';
+import { CreateIdiomDto, CreateWordDto } from './dto/create-word.dto';
 import { UpdateWordDto } from './dto/update-word.dto';
 import { GetUser, Public } from 'src/auth/decorator';
+import { User } from '@prisma/client';
 @Controller('word')
 export class WordController {
   constructor(private readonly wordService: WordService) {}
@@ -18,6 +19,14 @@ export class WordController {
   @Post()
   create(@Body() createWordDto: CreateWordDto, @GetUser() user: any) {
     return this.wordService.create(createWordDto, user);
+  }
+
+  @Post('idiom')
+  async createIdiom(
+    @Body() createIdiomDto: CreateIdiomDto,
+    @GetUser() user: User,
+  ) {
+    return this.wordService.createIdiom(createIdiomDto, user);
   }
 
   @Post('usage')

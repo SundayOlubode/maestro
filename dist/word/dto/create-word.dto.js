@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CreateWordDto = void 0;
+exports.CreateIdiomDto = exports.CreateWordDto = void 0;
 const class_validator_1 = require("class-validator");
 class CreateWordDto {
 }
@@ -19,4 +19,14 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateWordDto.prototype, "word", void 0);
+class CreateIdiomDto {
+}
+exports.CreateIdiomDto = CreateIdiomDto;
+__decorate([
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MinLength)(2),
+    (0, class_validator_1.MaxLength)(100),
+    __metadata("design:type", String)
+], CreateIdiomDto.prototype, "idiom", void 0);
 //# sourceMappingURL=create-word.dto.js.map

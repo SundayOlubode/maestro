@@ -23,12 +23,14 @@ const jwt_1 = require("@nestjs/jwt");
 const exception_module_1 = require("./exception/exception.module");
 const exception_service_1 = require("./exception/exception.service");
 const openai_module_1 = require("./openai/openai.module");
+const schedule_1 = require("@nestjs/schedule");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            schedule_1.ScheduleModule.forRoot(),
             config_1.ConfigModule.forRoot({
                 isGlobal: true,
                 cache: true,

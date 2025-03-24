@@ -1,8 +1,8 @@
-import { Injectable } from "@nestjs/common";
-import { CreateUserDto } from "./dto/create-user.dto";
-import { UpdateUserDto } from "./dto/update-user.dto";
-import { DatabaseService } from "src/database/database.service";
-import * as argon from "argon2";
+import { Injectable } from '@nestjs/common';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { DatabaseService } from 'src/database/database.service';
+import * as argon from 'argon2';
 
 @Injectable()
 export class UserService {
@@ -24,7 +24,7 @@ export class UserService {
     return `This action returns all user`;
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const user = await this.db.user.findUnique({
       where: { id },
     });

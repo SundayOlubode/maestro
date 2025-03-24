@@ -1,11 +1,11 @@
-import { CreateUserDto } from "./dto/create-user.dto";
-import { UpdateUserDto } from "./dto/update-user.dto";
-import { DatabaseService } from "src/database/database.service";
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { DatabaseService } from 'src/database/database.service';
 export declare class UserService {
     private readonly db;
     constructor(db: DatabaseService);
     create(dto: CreateUserDto): Promise<{
-        id: number;
+        id: string;
         firstname: string;
         lastname: string;
         email: string;
@@ -15,8 +15,8 @@ export declare class UserService {
         updated_at: Date;
     }>;
     findAll(): string;
-    findOne(id: number): Promise<{
-        id: number;
+    findOne(id: string): Promise<{
+        id: string;
         firstname: string;
         lastname: string;
         email: string;

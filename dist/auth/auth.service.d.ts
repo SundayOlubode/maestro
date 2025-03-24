@@ -18,7 +18,7 @@ export declare class AuthService {
         message: string;
         data: {
             user: {
-                id: number;
+                id: string;
                 firstname: string;
                 lastname: string;
                 email: string;
@@ -35,7 +35,7 @@ export declare class AuthService {
         message: string;
         data: {
             user: {
-                id: number;
+                id: string;
                 firstname: string;
                 lastname: string;
                 email: string;
