@@ -5,12 +5,12 @@ import { DatabaseService } from 'src/database/database.service';
 import { OpenaiService } from 'src/openai/openai.service';
 import * as fs from 'fs';
 import {
-  EnglishWords,
-  NODE_ENV,
   NUM_WORD_TO_GEN,
   NUMWORDUSAGES,
   SYSTEM_CONTENT,
   IDIOM_SYSTEM_CONTENT,
+  IDIOM_VALIDATOR_SYSTEM_CONTENT,
+  WORD_VALIDATOR_SYSTEM_CONTENT,
 } from 'src/constants';
 import { Counter, Word } from '@prisma/client';
 import { User } from 'src/user/entities/user.entity';
@@ -108,8 +108,7 @@ export class WordService {
         messages: [
           {
             role: 'system',
-            content:
-              'You are a helpful assistant that determines whether a phrase is a recognized English idiom or not. Respond only with "YES" if it is an idiom, or "NO" if it is not.',
+            content: IDIOM_VALIDATOR_SYSTEM_CONTENT,
           },
           {
             role: 'user',
@@ -140,8 +139,7 @@ export class WordService {
         messages: [
           {
             role: 'system',
-            content:
-              'You are a helpful assistant that determines whether a word is a recognized English word or not. Respond only with "YES" if it is a word, or "NO" if it is not.',
+            content: WORD_VALIDATOR_SYSTEM_CONTENT,
           },
           {
             role: 'user',
