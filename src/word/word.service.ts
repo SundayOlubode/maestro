@@ -11,6 +11,7 @@ import {
   IDIOM_SYSTEM_CONTENT,
   IDIOM_VALIDATOR_SYSTEM_CONTENT,
   WORD_VALIDATOR_SYSTEM_CONTENT,
+  NODE_ENV,
 } from 'src/constants';
 import { Counter, Word } from '@prisma/client';
 import { User } from 'src/user/entities/user.entity';
@@ -24,7 +25,7 @@ export class WordService {
     private readonly db: DatabaseService,
     private readonly openai: OpenaiService,
     private emailService: EmailService,
-  ) {}
+  ) { }
 
   async create(dto: CreateWordDto, user: User) {
     let word: string | Word = dto.word.toLowerCase();
@@ -463,12 +464,12 @@ export class WordService {
     isIdiom = false,
   ) {
     try {
-      const meaningRegex = /\*\*Meaning(?:.*?):\*\*(.*?)(?=\*\*|$)/s;
+      const meaningRegex = /Meaning:\s*(.*?)(?=\nUsages:|\n*$)/s;
       const meaningMatch = result.match(meaningRegex);
       const meaning = meaningMatch ? meaningMatch[1].trim() : '';
 
       const usages = [];
-      const usageRegex = /\d+\.?\s+(.*?)(?:\.|$)/gm;
+      const usageRegex = /^\d+\.\s+(.*?)(?=\n\d+\.|\n*$)/gm;
       let match;
 
       while ((match = usageRegex.exec(result)) !== null) {
@@ -479,12 +480,14 @@ export class WordService {
       }
 
       // Save to file
-      fs.appendFileSync(
-        isIdiom
-          ? 'idiom-meaning-and-usages.txt'
-          : 'word-meaning-and-usages.txt',
-        result + '\n\n',
-      );
+      if (NODE_ENV === 'development') {
+        fs.appendFileSync(
+          isIdiom
+            ? 'idiom-meaning-and-usages.txt'
+            : 'word-meaning-and-usages.txt',
+          result + '\n\n',
+        );
+      }
 
       // CREATE WORD/IDIOM
       await this.db.word.create({
