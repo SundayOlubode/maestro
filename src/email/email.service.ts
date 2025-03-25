@@ -72,36 +72,48 @@ export class EmailService {
     const subject = 'Your Daily Vocabulary';
 
     for (const email in allWords) {
-      let words = allWords[email];
+      try {
+        let words = allWords[email];
 
-      words.forEach((wordData) => {
-        const SLICEBEGIN = wordData.countdown - NUMWORDUSAGES;
-        const SLICEEND = wordData.countdown;
-        wordData.word.usages = wordData.word.usages.slice(
-          SLICEBEGIN,
-          SLICEEND,
-        );
-      });
+        words.forEach((wordData) => {
+          const SLICEBEGIN = Math.max(
+            0,
+            wordData.countdown - NUMWORDUSAGES,
+          );
+          const SLICEEND = wordData.countdown;
+          wordData.word.usages = wordData.word.usages.slice(
+            SLICEBEGIN,
+            SLICEEND,
+          );
+        });
 
-      let html;
-      const pathname = `${__dirname}/../../src/email/views/wordusages.ejs`;
-      renderFile(
-        pathname,
-        {
-          words,
-        },
-        function (err, data) {
-          html = data;
-        },
-      );
+        // Use promisified version to properly await template rendering
+        const pathname = `${__dirname}/../../src/email/views/wordusages.ejs`;
+        const html = await new Promise((resolve, reject) => {
+          renderFile(
+            pathname,
+            {
+              words,
+            },
+            function (err, data) {
+              if (err) reject(err);
+              else resolve(data);
+            },
+          );
+        });
 
-      const mailOptions = {
-        from: this.from,
-        to: email,
-        subject,
-        html,
-      };
-      await resend.emails.send(mailOptions);
+        const mailOptions = {
+          from: this.from,
+          to: email,
+          subject,
+          html,
+        };
+
+        //@ts-ignore
+        const result = await resend.emails.send(mailOptions);
+      } catch (error) {
+        console.error(`Error sending email to ${email}:`, error);
+      }
     }
   }
 }
