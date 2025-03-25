@@ -24,7 +24,7 @@ export class WordService {
     private readonly db: DatabaseService,
     private readonly openai: OpenaiService,
     private emailService: EmailService,
-  ) {}
+  ) { }
 
   async create(dto: CreateWordDto, user: User) {
     let word: string | Word = dto.word.toLowerCase();
@@ -463,14 +463,14 @@ export class WordService {
     isIdiom = false,
   ) {
     try {
-      const meaningRegex = /\*\*Meaning(?:.*?):\*\*(.*?)(?=\*\*|$)/s;
+      const meaningRegex = /Meaning:\s*(.*?)(?=\nUsages:|\n*$)/s;
       const meaningMatch = result.match(meaningRegex);
       const meaning = meaningMatch ? meaningMatch[1].trim() : '';
-
+      
       const usages = [];
-      const usageRegex = /\d+\.?\s+(.*?)(?:\.|$)/gm;
+      const usageRegex = /^\d+\.\s+(.*?)(?=\n\d+\.|\n*$)/gm;
       let match;
-
+      
       while ((match = usageRegex.exec(result)) !== null) {
         const usage = match[1].trim();
         if (usage) {
