@@ -9,6 +9,13 @@ import { join } from 'path';
 async function bootstrap() {
   const app =
     await NestFactory.create<NestExpressApplication>(AppModule);
+
+  app.enableCors({
+    origin: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    credentials: true,
+  });
+
   app.useStaticAssets(join(__dirname, '..', 'email'));
   app.setBaseViewsDir(join(__dirname, '..', 'views'));
   app.setViewEngine('ejs');
