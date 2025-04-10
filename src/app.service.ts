@@ -6,7 +6,7 @@ import { WordService } from './word/word.service';
 export class AppService {
   constructor(private readonly wordService: WordService) {}
 
-  @Cron('0 50 3 * * *') // Every day at 5:50 AM (3:50 PM UTC - Server time)
+  @Cron('0 50 4 * * *') // Every day at 6:50 AM (4:50 PM UTC - Server time)
   async handleDailyWordUsageNotification() {
     console.log('Sending word usages to users...');
     await this.wordService.sendWordUsagesToUsers();
