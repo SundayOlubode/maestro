@@ -14,7 +14,7 @@ export class AppService {
 
   @Cron('0 20 20 * * *') // Every day at 10:50 PM (20:20 PM UTC - Server time)
   async handleDailyEveningWordUsageNotification() {
-    console.log('Sending word usages to users...');
+    console.log('Sending evening word usages to users...');
     await this.wordService.sendWordUsagesToUsers();
   }
 
